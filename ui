@@ -1181,6 +1181,36 @@ function External:Configs(window)
 
     ServerSection:Button({ Name = "Rejoin Server", Callback = function() game:GetService("TeleportService"):Teleport(game.PlaceId, Players.LocalPlayer) end })
 
+
+    ServerSection:Button({
+    Name = "Join Lowest Server",
+    Callback = function()
+        local lowestServer = nil
+        local lowestPlayers = math.huge
+        local cursor = ""
+
+        repeat
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
+            local data = HttpService:JSONDecode(game:HttpGet(url))
+
+            for _, server in ipairs(data.data) do
+                if server.id ~= game.JobId and server.playing < server.maxPlayers then
+                    if server.playing < lowestPlayers then
+                        lowestPlayers = server.playing
+                        lowestServer = server
+                    end
+                end
+            end
+
+            cursor = data.nextPageCursor
+        until not cursor
+
+        if lowestServer then
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, lowestServer.id, Players.LocalPlayer)
+        end
+    end
+})
+
     ServerSection:Button({
         Name = "Server Hop",
         Callback = function()

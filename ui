@@ -1286,18 +1286,7 @@ function External:Configs(window)
         end
     })
 end
-return External-- Services 
-local InputService  = game:GetService("UserInputService")
-local HttpService   = game:GetService("HttpService")
-local GuiService    = game:GetService("GuiService")
-local RunService    = game:GetService("RunService")
-local CoreGui       = game:GetService("CoreGui")
-local TweenService  = game:GetService("TweenService")
-local Workspace     = game:GetService("Workspace")
-local Players       = game:GetService("Players")
-
-local lp            = Players.LocalPlayer
-local mouse         = lp:GetMouse()
+return External, Flags
 
 -- Short aliases
 local vec2          = Vector2.new

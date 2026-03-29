@@ -753,8 +753,33 @@ function External:Dropdown(properties)
     External:Create("UICorner", { Parent = Items.DropFrame, CornerRadius = dim(0, 8) })
     External:Themify(External:Create("UIStroke", { Parent = Items.DropFrame, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
+    -- Search bar
+    Items.SearchBar = External:Create("Frame", {
+        Parent = Items.DropFrame, Position = dim2(0, 6, 0, 6), Size = dim2(1, -12, 0, 26),
+        BackgroundColor3 = themes.preset.background, BorderSizePixel = 0, ZIndex = 202
+    })
+    External:Themify(Items.SearchBar, "background", "BackgroundColor3")
+    External:Create("UICorner", { Parent = Items.SearchBar, CornerRadius = dim(0, 6) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.SearchBar, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
+
+    Items.SearchIcon = External:Create("ImageLabel", {
+        Parent = Items.SearchBar, Position = dim2(0, 6, 0.5, 0), AnchorPoint = vec2(0, 0.5),
+        Size = dim2(0, 14, 0, 14), BackgroundTransparency = 1,
+        Image = "rbxassetid://132302594577680", ImageColor3 = themes.preset.subtext, ZIndex = 203
+    })
+    External:Themify(Items.SearchIcon, "subtext", "ImageColor3")
+
+    Items.SearchInput = External:Create("TextBox", {
+        Parent = Items.SearchBar, Position = dim2(0, 26, 0, 0), Size = dim2(1, -32, 1, 0),
+        BackgroundTransparency = 1, Text = "", PlaceholderText = "Search...",
+        TextColor3 = themes.preset.text, PlaceholderColor3 = themes.preset.subtext,
+        TextSize = 12, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium),
+        TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false, ZIndex = 203
+    })
+    External:Themify(Items.SearchInput, "text", "TextColor3")
+
     Items.Scroll = External:Create("ScrollingFrame", { 
-        Parent = Items.DropFrame, Size = dim2(1, 0, 1, -8), Position = dim2(0, 0, 0, 4), 
+        Parent = Items.DropFrame, Size = dim2(1, 0, 1, -44), Position = dim2(0, 0, 0, 40), 
         BackgroundTransparency = 1, ScrollBarThickness = 0, BorderSizePixel = 0, ZIndex = 201 
     })
     External:Create("UIListLayout", { Parent = Items.Scroll, SortOrder = Enum.SortOrder.LayoutOrder })
@@ -767,6 +792,7 @@ function External:Dropdown(properties)
         local absSize = Items.Main.AbsoluteSize
         Items.DropFrame.Position = dim2(0, absPos.X, 0, absPos.Y + absSize.Y + 6)
         Items.Scroll.CanvasSize = dim2(0, 0, 0, #Cfg.Options * 28)
+        Items.SearchInput.Text = ""
     end
 
     local function ToggleDropdown()
@@ -778,7 +804,7 @@ function External:Dropdown(properties)
             Items.DropFrame.Visible = true
             Cfg.UpdatePosition()
             Items.DropFrame.Size = dim2(0, Items.Main.AbsoluteSize.X, 0, 0)
-            local targetHeight = math.clamp(#Cfg.Options * 28 + 8, 0, 160)
+            local targetHeight = math.clamp(#Cfg.Options * 28 + 44, 0, 200)
             External:Tween(Items.Icon, {Rotation = 90}, TweenInfo.new(0.3))
             local tw = External:Tween(Items.DropFrame, {Size = dim2(0, Items.Main.AbsoluteSize.X, 0, targetHeight)}, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
             tw.Completed:Wait()
@@ -808,9 +834,20 @@ function External:Dropdown(properties)
     end)
 
     local OptionBtns = {}
+    local function ApplyFilter(query)
+        local q = query:lower()
+        local visible = 0
+        for _, entry in ipairs(OptionBtns) do
+            local matches = q == "" or tostring(entry.opt):lower():find(q, 1, true) ~= nil
+            entry.btn.Visible = matches
+            if matches then visible = visible + 1 end
+        end
+        Items.Scroll.CanvasSize = dim2(0, 0, 0, visible * 28)
+    end
+
     function Cfg.RefreshOptions(newList)
         Cfg.Options = newList or Cfg.Options
-        for _, btn in ipairs(OptionBtns) do btn:Destroy() end
+        for _, entry in ipairs(OptionBtns) do entry.btn:Destroy() end
         table.clear(OptionBtns)
         for _, opt in ipairs(Cfg.Options) do
             local btn = External:Create("TextButton", { 
@@ -820,9 +857,14 @@ function External:Dropdown(properties)
             })
             External:Themify(btn, "text", "TextColor3")
             btn.MouseButton1Click:Connect(function() Cfg.set(opt); ToggleDropdown() end)
-            table.insert(OptionBtns, btn)
+            table.insert(OptionBtns, { btn = btn, opt = opt })
         end
+        ApplyFilter(Items.SearchInput.Text)
     end
+
+    Items.SearchInput:GetPropertyChangedSignal("Text"):Connect(function()
+        ApplyFilter(Items.SearchInput.Text)
+    end)
 
     function Cfg.set(val)
         Items.SelectedText.Text = tostring(val)

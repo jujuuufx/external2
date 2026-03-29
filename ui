@@ -1287,8 +1287,6 @@ function External:Configs(window)
     })
 end
 return External, Flags
-
--- Short aliases
 local vec2          = Vector2.new
 local dim2          = UDim2.new
 local dim           = UDim.new

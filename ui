@@ -1225,33 +1225,36 @@ function External:Configs(window)
 
 
     ServerSection:Button({
-    Name = "Join Lowest Server",
-    Callback = function()
-        local lowestServer = nil
-        local lowestPlayers = math.huge
-        local cursor = ""
+        Name = "Join Lowest Server",
+        Callback = function()
+            local lowestServer = nil
+            local lowestPlayers = math.huge
+            local cursor = ""
 
-        repeat
-            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
-            local data = HttpService:JSONDecode(game:HttpGet(url))
+            repeat
+                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
+                local success, data = pcall(function() return HttpService:JSONDecode(game:HttpGet(url)) end)
 
-            for _, server in ipairs(data.data) do
-                if server.id ~= game.JobId and server.playing < server.maxPlayers then
-                    if server.playing < lowestPlayers then
-                        lowestPlayers = server.playing
-                        lowestServer = server
+                if success and data and data.data then
+                    for _, server in ipairs(data.data) do
+                        if server.id ~= game.JobId and server.playing < server.maxPlayers then
+                            if server.playing < lowestPlayers then
+                                lowestPlayers = server.playing
+                                lowestServer = server
+                            end
+                        end
                     end
+                    cursor = data.nextPageCursor
+                else
+                    cursor = nil
                 end
+            until not cursor
+
+            if lowestServer then
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, lowestServer.id, Players.LocalPlayer)
             end
-
-            cursor = data.nextPageCursor
-        until not cursor
-
-        if lowestServer then
-            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, lowestServer.id, Players.LocalPlayer)
         end
-    end
-})
+    })
 
     ServerSection:Button({
         Name = "Server Hop",
@@ -1259,11 +1262,16 @@ function External:Configs(window)
             local servers, cursor = {}, ""
             repeat
                 local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
-                local data = HttpService:JSONDecode(game:HttpGet(url))
-                for _, server in ipairs(data.data) do
-                    if server.id ~= game.JobId and server.playing < server.maxPlayers then table.insert(servers, server) end
+                local success, data = pcall(function() return HttpService:JSONDecode(game:HttpGet(url)) end)
+                
+                if success and data and data.data then
+                    for _, server in ipairs(data.data) do
+                        if server.id ~= game.JobId and server.playing < server.maxPlayers then table.insert(servers, server) end
+                    end
+                    cursor = data.nextPageCursor
+                else
+                    cursor = nil
                 end
-                cursor = data.nextPageCursor
             until not cursor or #servers > 0
             if #servers > 0 then game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)].id, Players.LocalPlayer) end
         end

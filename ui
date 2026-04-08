@@ -630,7 +630,16 @@ function External:Slider(properties)
     Items.Title = External:Create("TextLabel", { Parent = Items.ContainerBox, Position = dim2(0, 14, 0, 6), Size = dim2(1, -28, 0, 20), BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
     External:Themify(Items.Title, "text", "TextColor3")
 
-    Items.Val = External:Create("TextLabel", { Parent = Items.ContainerBox, Position = dim2(0, 14, 0, 6), Size = dim2(1, -28, 0, 20), BackgroundTransparency = 1, Text = tostring(Cfg.Default)..Cfg.Suffix, TextColor3 = themes.preset.accent, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold), TextXAlignment = Enum.TextXAlignment.Right })
+    -- Format initial value properly
+    local initialFormattedValue
+    if Cfg.Increment < 1 then
+        local decimalPlaces = math.max(1, string.len(tostring(Cfg.Increment):match("%.(%d+)") or ""))
+        initialFormattedValue = string.format("%." .. decimalPlaces .. "f", Cfg.Default)
+    else
+        initialFormattedValue = string.format("%.0f", Cfg.Default)
+    end
+    
+    Items.Val = External:Create("TextLabel", { Parent = Items.ContainerBox, Position = dim2(0, 14, 0, 6), Size = dim2(1, -28, 0, 20), BackgroundTransparency = 1, Text = initialFormattedValue..Cfg.Suffix, TextColor3 = themes.preset.accent, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold), TextXAlignment = Enum.TextXAlignment.Right })
     External:Themify(Items.Val, "accent", "TextColor3")
 
     -- [CREATIVE SWITCH]: Thicker modern slider track
@@ -649,7 +658,16 @@ function External:Slider(properties)
     local Value = Cfg.Default
     function Cfg.set(val)
         Value = math.clamp(math.round(val / Cfg.Increment) * Cfg.Increment, Cfg.Min, Cfg.Max)
-        Items.Val.Text = tostring(Value) .. Cfg.Suffix
+        -- Format value properly to avoid floating-point precision issues
+        local formattedValue
+        if Cfg.Increment < 1 then
+            -- Calculate decimal places needed based on increment
+            local decimalPlaces = math.max(1, string.len(tostring(Cfg.Increment):match("%.(%d+)") or ""))
+            formattedValue = string.format("%." .. decimalPlaces .. "f", Value)
+        else
+            formattedValue = string.format("%.0f", Value)
+        end
+        Items.Val.Text = formattedValue .. Cfg.Suffix
         External:Tween(Items.Fill, {Size = dim2((Value - Cfg.Min) / (Cfg.Max - Cfg.Min), 0, 1, 0)}, TweenInfo.new(0.15))
         if Cfg.Flag then Flags[Cfg.Flag] = Value end
         Cfg.Callback(Value)

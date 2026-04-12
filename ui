@@ -39,17 +39,25 @@ local Notifications  = External.Notifications
 local themes = {
     preset = {
         accent       = rgb(155, 89, 182),    -- Amethyst / Deep Purple
+        accent_light  = rgb(180, 110, 200),   -- Lighter accent for hover states
         
         background   = rgb(15, 15, 18),      -- Dark bluish grey
+        background_alt= rgb(20, 20, 25),      -- Alternative background
         section      = rgb(20, 20, 24),      -- Slightly lighter
         element      = rgb(26, 26, 32),      -- Element bg
+        element_hover= rgb(32, 32, 40),      -- Hover state for elements
         
         outline      = rgb(45, 45, 55),      -- Visible outline
+        outline_bright= rgb(65, 65, 75),     -- Brighter outline for emphasis
         text         = rgb(250, 250, 250),   -- Clean white
         subtext      = rgb(160, 160, 170),   -- Cool grey
+        subtext_dim  = rgb(120, 120, 130),   -- Dimmer subtext
         
         tab_active   = rgb(35, 35, 45),      -- Active Tab
         tab_inactive = rgb(20, 20, 24),
+        success      = rgb(46, 213, 115),    -- Success green
+        warning      = rgb(255, 159, 67),    -- Warning orange
+        error        = rgb(255, 71, 87),     -- Error red
     },
     utility = {}
 }
@@ -76,9 +84,34 @@ end
 -- misc helpers
 function External:Tween(Object, Properties, Info)
     if not Object then return end
-    local tween = TweenService:Create(Object, Info or TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), Properties)
+    local tweenInfo = Info or TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(Object, tweenInfo, Properties)
     tween:Play()
     return tween
+end
+
+function External:HoverTween(Object, Properties)
+    if not Object then return end
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(Object, tweenInfo, Properties)
+    tween:Play()
+    return tween
+end
+
+function External:AddHoverEffect(button, hoverProps, normalProps)
+    if not button then return end
+    
+    local isHovering = false
+    
+    button.MouseEnter:Connect(function()
+        isHovering = true
+        External:HoverTween(button, hoverProps)
+    end)
+    
+    button.MouseLeave:Connect(function()
+        isHovering = false
+        External:HoverTween(button, normalProps or {})
+    end)
 end
 
 function External:Create(instance, options)
@@ -221,6 +254,8 @@ function External:Window(properties)
 
     -- User Profile
     local headshot = "rbxthumb://type=AvatarHeadShot&id="..lp.UserId.."&w=48&h=48"
+    local isAnonymous = false
+    
     Items.AvatarFrame = External:Create("Frame", {
         Parent = Items.Header, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -16, 0.5, 0), 
         Size = dim2(0, 32, 0, 32), BackgroundColor3 = themes.preset.element, BorderSizePixel = 0, ZIndex = 5
@@ -241,12 +276,33 @@ function External:Window(properties)
         BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 5
     })
     External:Themify(Items.Username, "text", "TextColor3")
+    
+    -- Anonymous mode toggle function
+    function Cfg.SetAnonymous(enabled)
+        isAnonymous = enabled
+        if enabled then
+            Items.Avatar.Image = "rbxthumb://type=Asset&id=10723377240&w=48&h=48" -- Anonymous icon
+            Items.Username.Text = "Anonymous"
+            Items.AvatarFrame.BackgroundColor3 = themes.preset.background_alt
+        else
+            Items.Avatar.Image = headshot
+            Items.Username.Text = lp.Name
+            Items.AvatarFrame.BackgroundColor3 = themes.preset.element
+        end
+        External:Themify(Items.AvatarFrame, enabled and "background_alt" or "element", "BackgroundColor3")
+    end
 
     Items.SettingsBtn = External:Create("ImageButton", {
         Parent = Items.Header, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -225, 0.5, 0),
         Size = dim2(0, 18, 0, 18), BackgroundTransparency = 1, Image = "rbxassetid://10734950309", ImageColor3 = themes.preset.subtext, ZIndex = 5
     })
     External:Themify(Items.SettingsBtn, "subtext", "ImageColor3")
+    
+    -- Add hover effect to settings button
+    External:AddHoverEffect(Items.SettingsBtn, 
+        {ImageColor3 = themes.preset.accent}, 
+        {ImageColor3 = themes.preset.subtext}
+    )
     
     Items.Username:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
         Items.SettingsBtn.Position = dim2(1, -85 - Items.Username.TextBounds.X, 0.5, 0)
@@ -511,6 +567,18 @@ function External:ScriptCard(properties)
     External:Themify(Items.LoadBtn, "accent", "BackgroundColor3")
     External:Create("UICorner", { Parent = Items.LoadBtn, CornerRadius = dim(0, 6) })
 
+    -- Add hover effect to script card container
+    External:AddHoverEffect(Items.Container, 
+        {BackgroundColor3 = themes.preset.element_hover}, 
+        {BackgroundColor3 = themes.preset.element}
+    )
+
+    -- Add hover effect to RUN button
+    External:AddHoverEffect(Items.LoadBtn, 
+        {BackgroundColor3 = themes.preset.accent_light}, 
+        {BackgroundColor3 = themes.preset.accent}
+    )
+
     Items.LoadBtn.MouseButton1Click:Connect(function()
         External:Tween(Items.LoadBtn, {BackgroundTransparency = 0.4, Size = dim2(0, 56, 0, 28)}, TweenInfo.new(0.1))
         task.wait(0.1)
@@ -574,8 +642,8 @@ function External:Toggle(properties)
 
     Items.Button.MouseButton1Click:Connect(function() Cfg.set(not State) end)
     if Cfg.Default then Cfg.set(true) end
-    if Cfg.Flag then ConfigFlags[Cfg.Flag] = Cfg.set end
 
+    if Cfg.Flag then ConfigFlags[Cfg.Flag] = Cfg.set end
     return setmetatable(Cfg, External)
 end
 
@@ -596,10 +664,16 @@ function External:Button(properties)
     External:Create("UICorner", { Parent = Items.Button, CornerRadius = dim(0, 8) })
     External:Themify(External:Create("UIStroke", { Parent = Items.Button, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
+    -- Add hover effect
+    External:AddHoverEffect(Items.Button, 
+        {BackgroundColor3 = themes.preset.element_hover, TextColor3 = themes.preset.accent}, 
+        {BackgroundColor3 = themes.preset.element, TextColor3 = themes.preset.text}
+    )
+
     Items.Button.MouseButton1Click:Connect(function()
-        External:Tween(Items.Button, {Size = dim2(0.98, 0, 0, 34), BackgroundColor3 = themes.preset.accent}, TweenInfo.new(0.1))
+        External:Tween(Items.Button, {Size = dim2(0.98, 0, 0, 34), BackgroundColor3 = themes.preset.accent, TextColor3 = rgb(255,255,255)}, TweenInfo.new(0.1))
         task.wait(0.1)
-        External:Tween(Items.Button, {Size = dim2(1, 0, 0, 36), BackgroundColor3 = themes.preset.element}, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
+        External:Tween(Items.Button, {Size = dim2(1, 0, 0, 36), BackgroundColor3 = themes.preset.element, TextColor3 = themes.preset.text}, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
         Cfg.Callback()
     end)
     return setmetatable(Cfg, External)
@@ -627,7 +701,7 @@ function External:Slider(properties)
     External:Create("UICorner", { Parent = Items.ContainerBox, CornerRadius = dim(0, 8) })
     External:Themify(External:Create("UIStroke", { Parent = Items.ContainerBox, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
-    Items.Title = External:Create("TextLabel", { Parent = Items.ContainerBox, Position = dim2(0, 14, 0, 6), Size = dim2(1, -28, 0, 20), BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
+    Items.Title = External:Create("TextLabel", { Parent = Items.ContainerBox, Position = dim2(0, 14, 0, 0), Size = dim2(1, -28, 0, 20), BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
     External:Themify(Items.Title, "text", "TextColor3")
 
     -- Format initial value properly
@@ -754,6 +828,12 @@ function External:Dropdown(properties)
     Items.Main = External:Create("TextButton", { 
         Parent = Items.ContainerBox, Size = dim2(1, 0, 1, 0), BackgroundTransparency = 1, Text = "", AutoButtonColor = false 
     })
+
+    -- Add hover effect to dropdown main button
+    External:AddHoverEffect(Items.Main, 
+        {BackgroundColor3 = themes.preset.element_hover}, 
+        {BackgroundColor3 = themes.preset.element}
+    )
 
     Items.Title = External:Create("TextLabel", { Parent = Items.Main, Position = dim2(0, 14, 0, 0), Size = dim2(0, 100, 1, 0), BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
     External:Themify(Items.Title, "subtext", "TextColor3")
@@ -1221,6 +1301,17 @@ function External:Configs(window)
     })
 
     local SectionRight = Tab:Section({Name = "Theme Settings", Side = "Right", Icon = "rbxassetid://10734950309"})
+
+    -- Anonymous Mode Toggle
+    SectionRight:Toggle({
+        Name = "Anonymous Mode",
+        Default = false,
+        Callback = function(enabled)
+            if window.SetAnonymous then
+                window.SetAnonymous(enabled)
+            end
+        end
+    })
 
     SectionRight:Label({Name = "Accent Color"}):Colorpicker({ Callback = function(color3) External:RefreshTheme("accent", color3) end, Color = themes.preset.accent })
     SectionRight:Label({Name = "Background Color"}):Colorpicker({ Callback = function(color3) External:RefreshTheme("background", color3) end, Color = themes.preset.background })

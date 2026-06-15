@@ -38,8 +38,8 @@ local Notifications  = External.Notifications
 
 local themes = {
     preset = {
-        accent       = rgb(0, 240, 255),     -- Neon Cyan
-        accent_light = rgb(100, 245, 255),   -- Lighter cyan for hover states
+        accent       = rgb(155, 89, 182),    -- Amethyst / Deep Purple
+        accent_light = rgb(180, 110, 200),   -- Lighter purple for hover states
         
         background   = rgb(6, 6, 8),         -- Near pure black
         background_alt= rgb(10, 10, 14),     -- Alternative background
@@ -577,7 +577,7 @@ function External:ScriptCard(properties)
     Items.LoadBtn = External:Create("TextButton", {
         Parent = Items.Container, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -12, 0.5, 0),
         Size = dim2(0, 60, 0, 30), BackgroundColor3 = themes.preset.accent, Text = "RUN",
-        TextColor3 = rgb(6, 6, 8), FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold), TextSize = 12, AutoButtonColor = false
+        TextColor3 = rgb(255, 255, 255), FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold), TextSize = 12, AutoButtonColor = false
     })
     External:Themify(Items.LoadBtn, "accent", "BackgroundColor3")
     External:Create("UICorner", { Parent = Items.LoadBtn, CornerRadius = dim(0, 6) })
@@ -648,8 +648,8 @@ function External:Toggle(properties)
     function Cfg.set(bool)
         State = bool
         External:Tween(Items.SwitchBG, {BackgroundColor3 = State and themes.preset.accent or themes.preset.background}, TweenInfo.new(0.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out))
-        External:Tween(Items.SwitchKnob, {Position = State and dim2(0, 19, 0.5, 0) or dim2(0, 3, 0.5, 0), BackgroundColor3 = State and rgb(6, 6, 8) or themes.preset.subtext}, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
-        External:Tween(Items.Title, {TextColor3 = State and themes.preset.accent or themes.preset.subtext}, TweenInfo.new(0.15))
+        External:Tween(Items.SwitchKnob, {Position = State and dim2(0, 19, 0.5, 0) or dim2(0, 3, 0.5, 0), BackgroundColor3 = State and rgb(255, 255, 255) or themes.preset.subtext}, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
+        External:Tween(Items.Title, {TextColor3 = State and themes.preset.text or themes.preset.subtext}, TweenInfo.new(0.15))
         
         if Cfg.Flag then Flags[Cfg.Flag] = State end
         Cfg.Callback(State)
@@ -686,7 +686,7 @@ function External:Button(properties)
     )
 
     Items.Button.MouseButton1Click:Connect(function()
-        External:Tween(Items.Button, {Size = dim2(0.98, 0, 0, 34), BackgroundColor3 = themes.preset.accent, TextColor3 = rgb(6, 6, 8)}, TweenInfo.new(0.08))
+        External:Tween(Items.Button, {Size = dim2(0.98, 0, 0, 34), BackgroundColor3 = themes.preset.accent, TextColor3 = rgb(255, 255, 255)}, TweenInfo.new(0.08))
         task.wait(0.08)
         External:Tween(Items.Button, {Size = dim2(1, 0, 0, 36), BackgroundColor3 = themes.preset.element, TextColor3 = themes.preset.text}, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
         Cfg.Callback()

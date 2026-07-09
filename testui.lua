@@ -95,6 +95,21 @@ function External:Tween(Object, Properties, Info)
     return tween
 end
 
+function External:TrackConnection(signal, callback)
+    local conn = signal:Connect(callback)
+    table.insert(External.Connections, conn)
+    return conn
+end
+
+function External:DisconnectAll()
+    for _, conn in ipairs(External.Connections) do
+        if conn and conn.Connected then
+            conn:Disconnect()
+        end
+    end
+    table.clear(External.Connections)
+end
+
 function External:AddHoverEffect(button, hoverProps, normalProps)
     if not button then return end
     button.MouseEnter:Connect(function()
@@ -167,6 +182,7 @@ function External:Window(properties)
         TabInfo = nil, Items = {}, Tweening = false, IsSwitchingTab = false;
     }
 
+    External:DisconnectAll()
     if External.Gui then External.Gui:Destroy() end
     if External.Other then External.Other:Destroy() end
     if External.ToggleGui then External.ToggleGui:Destroy() end
@@ -181,6 +197,18 @@ function External:Window(properties)
         Parent = External.Gui, Position = dim2(0.5, -Cfg.Size.X.Offset / 2, 0.5, -Cfg.Size.Y.Offset / 2),
         Size = Cfg.Size, BackgroundTransparency = 1, BorderSizePixel = 0
     })
+
+    local uiScale = External:Create("UIScale", { Parent = Items.Wrapper, Scale = 1 })
+    local function UpdateScale()
+        local viewportSize = External.Gui.AbsoluteSize
+        if viewportSize.X > 0 and viewportSize.Y > 0 then
+            local scaleX = math.min(1, viewportSize.X / (Cfg.Size.X.Offset + 30))
+            local scaleY = math.min(1, viewportSize.Y / (Cfg.Size.Y.Offset + 30))
+            uiScale.Scale = math.min(scaleX, scaleY)
+        end
+    end
+    UpdateScale()
+    External:TrackConnection(External.Gui:GetPropertyChangedSignal("AbsoluteSize"), UpdateScale)
     
     Items.Window = External:Create("Frame", {
         Parent = Items.Wrapper, Size = dim2(1, 0, 1, 0),
@@ -1373,6 +1401,7 @@ function External:Configs(window)
     MiscSection:Button({
         Name = "Unload UI",
         Callback = function()
+            External:DisconnectAll()
             if External.Gui then External.Gui:Destroy() end
             if External.Other then External.Other:Destroy() end
             if External.ToggleGui then External.ToggleGui:Destroy() end

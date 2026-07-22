@@ -22,9 +22,9 @@ local hex           = Color3.fromHex
 
 -- Modern Font Setup
 local Fonts = {
-    Bold = Enum.Font.GothamBold,
-    Medium = Enum.Font.GothamMedium,
-    SemiBold = Enum.Font.GothamSemibold
+    Bold = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold),
+    Medium = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Medium),
+    SemiBold = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold)
 }
 
 -- Library init / globals
@@ -257,7 +257,7 @@ function External:Window(properties)
         Parent = Items.Header, Text = Cfg.Title, TextColor3 = themes.preset.text,
         AnchorPoint = vec2(0, 0.5), Position = dim2(0, 16, 0.5, 0),
         Size = dim2(0, 0, 0, 18), AutomaticSize = Enum.AutomaticSize.X,
-        BackgroundTransparency = 1, Font = Fonts.Bold, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
+        BackgroundTransparency = 1, FontFace = Fonts.Bold, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
     })
     External:Themify(Items.LogoText, "text", "TextColor3")
 
@@ -265,7 +265,7 @@ function External:Window(properties)
         Parent = Items.Header, Text = Cfg.Subtitle, TextColor3 = themes.preset.accent,
         AnchorPoint = vec2(0, 0.5), Position = dim2(0, 20 + Items.LogoText.TextBounds.X, 0.5, 0),
         Size = dim2(0, 0, 0, 18), AutomaticSize = Enum.AutomaticSize.X,
-        BackgroundTransparency = 1, Font = Fonts.SemiBold, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
+        BackgroundTransparency = 1, FontFace = Fonts.SemiBold, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
     })
     External:Themify(Items.SubLogoText, "accent", "TextColor3")
     
@@ -294,7 +294,7 @@ function External:Window(properties)
     Items.Username = External:Create("TextLabel", {
         Parent = Items.Header, Text = lp.Name, TextColor3 = themes.preset.text,
         AnchorPoint = vec2(1, 0.5), Position = dim2(1, -54, 0.5, 0), Size = dim2(0, 140, 0, 14),
-        BackgroundTransparency = 1, Font = Fonts.SemiBold, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 5
+        BackgroundTransparency = 1, FontFace = Fonts.SemiBold, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 5
     })
     External:Themify(Items.Username, "text", "TextColor3")
     
@@ -507,7 +507,7 @@ function External:Section(properties)
 
     Items.Title = External:Create("TextLabel", { 
         Parent = Items.Header, Position = dim2(0, 26, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(1, -38, 0, 14), 
-        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, Font = Fonts.Bold, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left 
+        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, FontFace = Fonts.Bold, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left 
     })
     External:Themify(Items.Title, "text", "TextColor3")
 
@@ -560,21 +560,21 @@ function External:ScriptCard(properties)
     Items.Title = External:Create("TextLabel", {
         Parent = Items.Container, Position = dim2(0, 52, 0, 10), Size = dim2(1, -120, 0, 16),
         BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text,
-        Font = Fonts.Bold, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left
+        FontFace = Fonts.Bold, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left
     })
     External:Themify(Items.Title, "text", "TextColor3")
 
     Items.Desc = External:Create("TextLabel", {
         Parent = Items.Container, Position = dim2(0, 52, 0, 28), Size = dim2(1, -120, 0, 14),
         BackgroundTransparency = 1, Text = Cfg.Description, TextColor3 = themes.preset.subtext,
-        Font = Fonts.Medium, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left
+        FontFace = Fonts.Medium, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left
     })
     External:Themify(Items.Desc, "subtext", "TextColor3")
 
     Items.LoadBtn = External:Create("TextButton", {
         Parent = Items.Container, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -10, 0.5, 0),
         Size = dim2(0, 56, 0, 28), BackgroundColor3 = themes.preset.accent, Text = "RUN",
-        TextColor3 = rgb(255, 255, 255), Font = Fonts.Bold, TextSize = 12, AutoButtonColor = false
+        TextColor3 = rgb(255, 255, 255), FontFace = Fonts.Bold, TextSize = 12, AutoButtonColor = false
     })
     External:Themify(Items.LoadBtn, "accent", "BackgroundColor3")
     External:Create("UICorner", { Parent = Items.LoadBtn, CornerRadius = dim(0, 6) })
@@ -627,7 +627,7 @@ function External:Toggle(properties)
 
     Items.Title = External:Create("TextLabel", { 
         Parent = Items.Button, Position = dim2(0, 12, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(1, -54, 1, 0), 
-        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, Font = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left 
+        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left 
     })
     External:Themify(Items.Title, "subtext", "TextColor3")
 
@@ -659,7 +659,7 @@ function External:Button(properties)
 
     Items.Button = External:Create("TextButton", { 
         Parent = self.Items.Container, Size = dim2(1, 0, 0, 34), BackgroundColor3 = themes.preset.element, 
-        Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, Font = Fonts.SemiBold, AutoButtonColor = false 
+        Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, FontFace = Fonts.SemiBold, AutoButtonColor = false 
     })
     External:Themify(Items.Button, "element", "BackgroundColor3")
     External:Themify(Items.Button, "text", "TextColor3")
@@ -700,7 +700,7 @@ function External:Slider(properties)
 
     Items.Title = External:Create("TextLabel", { 
         Parent = Items.ContainerBox, Position = dim2(0, 12, 0, 8), Size = dim2(1, -24, 0, 16), 
-        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, Font = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left 
+        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, FontFace = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left 
     })
     External:Themify(Items.Title, "text", "TextColor3")
 
@@ -708,7 +708,7 @@ function External:Slider(properties)
     
     Items.Val = External:Create("TextLabel", { 
         Parent = Items.ContainerBox, Position = dim2(0, 12, 0, 8), Size = dim2(1, -24, 0, 16), 
-        BackgroundTransparency = 1, Text = initialFormattedValue..Cfg.Suffix, TextColor3 = themes.preset.accent, TextSize = 13, Font = Fonts.Bold, TextXAlignment = Enum.TextXAlignment.Right 
+        BackgroundTransparency = 1, Text = initialFormattedValue..Cfg.Suffix, TextColor3 = themes.preset.accent, TextSize = 13, FontFace = Fonts.Bold, TextXAlignment = Enum.TextXAlignment.Right 
     })
     External:Themify(Items.Val, "accent", "TextColor3")
 
@@ -778,7 +778,7 @@ function External:Textbox(properties)
     Items.Input = External:Create("TextBox", { 
         Parent = Items.ContainerBox, Position = dim2(0, 12, 0, 0), Size = dim2(1, -24, 1, 0), BackgroundTransparency = 1, 
         Text = Cfg.Default, PlaceholderText = Cfg.Placeholder, TextColor3 = themes.preset.text, PlaceholderColor3 = themes.preset.subtext, 
-        TextSize = 13, Font = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false 
+        TextSize = 13, FontFace = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false 
     })
     External:Themify(Items.Input, "text", "TextColor3")
 
@@ -821,13 +821,13 @@ function External:Dropdown(properties)
 
     Items.Title = External:Create("TextLabel", { 
         Parent = Items.Main, Position = dim2(0, 12, 0, 0), Size = dim2(0, 100, 1, 0), 
-        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, Font = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left 
+        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left 
     })
     External:Themify(Items.Title, "subtext", "TextColor3")
 
     Items.SelectedText = External:Create("TextLabel", { 
         Parent = Items.Main, Position = dim2(0, 112, 0, 0), Size = dim2(1, -140, 1, 0), 
-        BackgroundTransparency = 1, Text = "...", TextColor3 = themes.preset.text, TextSize = 13, Font = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Right 
+        BackgroundTransparency = 1, Text = "...", TextColor3 = themes.preset.text, TextSize = 13, FontFace = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Right 
     })
     External:Themify(Items.SelectedText, "text", "TextColor3")
     
@@ -863,7 +863,7 @@ function External:Dropdown(properties)
         Parent = Items.SearchBar, Position = dim2(0, 24, 0, 0), Size = dim2(1, -30, 1, 0),
         BackgroundTransparency = 1, Text = "", PlaceholderText = "Search...",
         TextColor3 = themes.preset.text, PlaceholderColor3 = themes.preset.subtext,
-        TextSize = 12, Font = Fonts.Medium,
+        TextSize = 12, FontFace = Fonts.Medium,
         TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false, ZIndex = 203
     })
     External:Themify(Items.SearchInput, "text", "TextColor3")
@@ -948,7 +948,7 @@ function External:Dropdown(properties)
             local btn = External:Create("TextButton", { 
                 Parent = Items.Scroll, Size = dim2(1, 0, 0, 26), BackgroundTransparency = 1, 
                 Text = "   " .. tostring(opt), TextColor3 = themes.preset.text, TextSize = 13, 
-                Font = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 202 
+                FontFace = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 202 
             })
             External:Themify(btn, "text", "TextColor3")
             External:AddHoverEffect(btn, {TextColor3 = themes.preset.accent}, {TextColor3 = themes.preset.text})
@@ -994,7 +994,7 @@ function External:Label(properties)
     Items.Title = External:Create("TextLabel", { 
         Parent = Items.ContainerBox, Position = dim2(0, 12, 0, 0), Size = dim2(1, -24, 1, 0), BackgroundTransparency = 1, 
         Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, TextWrapped = Cfg.Wrapped, 
-        Font = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center 
+        FontFace = Fonts.Medium, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center 
     })
     External:Themify(Items.Title, "subtext", "TextColor3")
     
@@ -1143,7 +1143,7 @@ function External:Keybind(properties)
     local KeyBtn = External:Create("TextButton", { 
         Parent = attachParent, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -10, 0.5, 0), 
         Size = dim2(0, 40, 0, 20), BackgroundColor3 = themes.preset.background, TextColor3 = themes.preset.text, 
-        Text = Keys[Cfg.Default] or "None", TextSize = 12, Font = Fonts.SemiBold 
+        Text = Keys[Cfg.Default] or "None", TextSize = 12, FontFace = Fonts.SemiBold 
     })
     External:Themify(KeyBtn, "background", "BackgroundColor3")
     External:Themify(KeyBtn, "text", "TextColor3")
@@ -1213,7 +1213,7 @@ function Notifications:Create(properties)
     External:Create("UICorner", { Parent = Items.LeftAccent, CornerRadius = dim(0, 6) })
    
     Items.Name = External:Create("TextLabel", {
-        Parent = Items.Outline; Text = Cfg.Name; TextColor3 = themes.preset.text; Font = Fonts.Medium;
+        Parent = Items.Outline; Text = Cfg.Name; TextColor3 = themes.preset.text; FontFace = Fonts.Medium;
         BackgroundTransparency = 1; Size = dim2(1, 0, 1, 0); AutomaticSize = Enum.AutomaticSize.None; TextWrapped = true; 
         TextSize = 13; TextXAlignment = Enum.TextXAlignment.Left; ZIndex = 302
     })

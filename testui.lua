@@ -477,6 +477,113 @@ function External:Tab(properties)
     return setmetatable(Cfg, External)
 end
 
+function External:SubTab(properties)
+    local Cfg = { 
+        Name = properties.Name or properties.name or "SubTab", 
+        Items = {} 
+    }
+    local Items = Cfg.Items
+
+    -- self is the Tab object
+    if not self.SubTabsInitialized then
+        self.SubTabsInitialized = true
+        self.CurrentSubTab = nil
+        self.SubTabBtns = {}
+        
+        if self.Items.Left then self.Items.Left:Destroy() end
+        if self.Items.Right then self.Items.Right:Destroy() end
+        for _, child in ipairs(self.Items.Pages:GetChildren()) do
+            if child:IsA("UIListLayout") or child:IsA("UIPadding") then child:Destroy() end
+        end
+
+        External:Create("UIListLayout", { Parent = self.Items.Pages, FillDirection = Enum.FillDirection.Vertical, Padding = dim(0, 8) })
+        External:Create("UIPadding", { Parent = self.Items.Pages, PaddingTop = dim(0, 2), PaddingBottom = dim(0, 2), PaddingRight = dim(0, 2), PaddingLeft = dim(0, 2) })
+
+        self.Items.SubTabBar = External:Create("ScrollingFrame", {
+            Parent = self.Items.Pages, Size = dim2(1, 0, 0, 30), BackgroundTransparency = 1,
+            ScrollBarThickness = 0, CanvasSize = dim2(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.X
+        })
+        External:Create("UIListLayout", { Parent = self.Items.SubTabBar, FillDirection = Enum.FillDirection.Horizontal, Padding = dim(0, 15), VerticalAlignment = Enum.VerticalAlignment.Center })
+        External:Create("UIPadding", { Parent = self.Items.SubTabBar, PaddingLeft = dim(0, 4), PaddingRight = dim(0, 4) })
+
+        self.Items.SubContent = External:Create("Frame", {
+            Parent = self.Items.Pages, Size = dim2(1, 0, 1, -38), BackgroundTransparency = 1, ClipsDescendants = true
+        })
+    end
+
+    Items.Button = External:Create("TextButton", {
+        Parent = self.Items.SubTabBar, Size = dim2(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X,
+        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, FontFace = Fonts.SemiBold, TextSize = 14
+    })
+    External:Themify(Items.Button, "subtext", "TextColor3")
+
+    Items.Indicator = External:Create("Frame", {
+        Parent = Items.Button, AnchorPoint = vec2(0.5, 1), Position = dim2(0.5, 0, 1, 0),
+        Size = dim2(0, 0, 0, 2), BackgroundColor3 = themes.preset.accent, BorderSizePixel = 0, BackgroundTransparency = 1
+    })
+    External:Themify(Items.Indicator, "accent", "BackgroundColor3")
+
+    Items.Pages = External:Create("CanvasGroup", { Parent = External.Other, Size = dim2(1, 0, 1, 0), BackgroundTransparency = 1, Visible = false, GroupTransparency = 1 })
+    External:Create("UIListLayout", { Parent = Items.Pages, FillDirection = Enum.FillDirection.Horizontal, Padding = dim(0, 12) })
+    
+    Items.Left = External:Create("ScrollingFrame", { 
+        Parent = Items.Pages, Size = dim2(0.5, -6, 1, 0), BackgroundTransparency = 1, 
+        ScrollBarThickness = 0, CanvasSize = dim2(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y
+    })
+    External:Create("UIListLayout", { Parent = Items.Left, Padding = dim(0, 12) })
+    External:Create("UIPadding", { Parent = Items.Left, PaddingBottom = dim(0, 12) })
+
+    Items.Right = External:Create("ScrollingFrame", { 
+        Parent = Items.Pages, Size = dim2(0.5, -6, 1, 0), BackgroundTransparency = 1, 
+        ScrollBarThickness = 0, CanvasSize = dim2(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y
+    })
+    External:Create("UIListLayout", { Parent = Items.Right, Padding = dim(0, 12) })
+    External:Create("UIPadding", { Parent = Items.Right, PaddingBottom = dim(0, 12) })
+
+    function Cfg.OpenSubTab()
+        if self.IsSwitchingSubTab or self.CurrentSubTab == Cfg.Items then return end
+        local oldTab = self.CurrentSubTab
+        self.IsSwitchingSubTab = true
+        self.CurrentSubTab = Cfg.Items
+
+        local buttonTween = TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+        if oldTab and oldTab.Button then
+            External:Tween(oldTab.Button, {TextColor3 = themes.preset.subtext}, buttonTween)
+            External:Tween(oldTab.Indicator, {Size = dim2(0, 0, 0, 2), BackgroundTransparency = 1}, buttonTween)
+        end
+
+        if Items.Button then 
+            External:Tween(Items.Button, {TextColor3 = themes.preset.accent}, buttonTween)
+            External:Tween(Items.Indicator, {Size = dim2(1, 4, 0, 2), BackgroundTransparency = 0}, buttonTween)
+        end
+        
+        task.spawn(function()
+            if oldTab then
+                External:Tween(oldTab.Pages, {GroupTransparency = 1, Size = dim2(0.95, 0, 0.95, 0)}, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out))
+                task.wait(0.15)
+                oldTab.Pages.Visible = false
+                oldTab.Pages.Parent = External.Other
+            end
+
+            Items.Pages.Size = dim2(0.95, 0, 0.95, 0)
+            Items.Pages.GroupTransparency = 1
+            Items.Pages.Parent = self.Items.SubContent
+            Items.Pages.Visible = true
+
+            External:Tween(Items.Pages, {GroupTransparency = 0, Size = dim2(1, 0, 1, 0)}, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
+            task.wait(0.2)
+            
+            Items.Pages.GroupTransparency = 0 
+            self.IsSwitchingSubTab = false
+        end)
+    end
+
+    Items.Button.MouseButton1Down:Connect(Cfg.OpenSubTab)
+    if not self.CurrentSubTab then Cfg.OpenSubTab() end
+    return setmetatable(Cfg, External)
+end
+
 function External:Section(properties)
     local Cfg = { 
         Name = properties.Name or properties.name or "Section", 

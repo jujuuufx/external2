@@ -3208,13 +3208,6 @@ end)
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
                 
-                listLayout.Instance:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                    local contentSize = listLayout.Instance.AbsoluteContentSize.Y + 20 -- Padding top/bottom 10
-                    Items["OptionHolder"].Instance.CanvasSize = UDim2New(0, 0, 0, contentSize)
-                    local newHeight = math.min(contentSize, 200)
-                    Items["OptionHolder"].Instance.Size = UDim2New(0, 200, 0, newHeight)
-                end)
-                
                 Instances:Create("UIPadding", {
                     Parent = Items["OptionHolder"].Instance,
                     Name = "\0",
@@ -3277,8 +3270,12 @@ end)
                     Items["OptionHolder"].Instance.Parent = Library.Holder.Instance
                     
                     RenderStepped = RunService.RenderStepped:Connect(function()
+                        local listLayout = Items["OptionHolder"].Instance:FindFirstChildOfClass("UIListLayout")
+                        local contentHeight = listLayout and listLayout.AbsoluteContentSize.Y or 0
+                        local targetHeight = math.min(contentHeight + 20, 200)
                         Items["OptionHolder"].Instance.Position = UDim2New(0, Items["RealDropdown"].Instance.AbsolutePosition.X, 0, Items["RealDropdown"].Instance.AbsolutePosition.Y - 25)
-                        Items["OptionHolder"].Instance.Size = UDim2New(0, Items["RealDropdown"].Instance.AbsoluteSize.X, 0, Items["OptionHolder"].Instance.Size.Y.Offset)
+                        Items["OptionHolder"].Instance.Size = UDim2New(0, Items["RealDropdown"].Instance.AbsoluteSize.X, 0, targetHeight)
+                        Items["OptionHolder"].Instance.CanvasSize = UDim2New(0, 0, 0, contentHeight + 20)
                     end)
 
                     for Index, Value in Library.OpenFrames do 

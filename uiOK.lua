@@ -3278,7 +3278,7 @@ end)
                     
                     RenderStepped = RunService.RenderStepped:Connect(function()
                         Items["OptionHolder"].Instance.Position = UDim2New(0, Items["RealDropdown"].Instance.AbsolutePosition.X, 0, Items["RealDropdown"].Instance.AbsolutePosition.Y - 25)
-                        Items["OptionHolder"].Instance.Size = UDim2New(0, Items["RealDropdown"].Instance.AbsoluteSize.X, 0, 0)
+                        Items["OptionHolder"].Instance.Size = UDim2New(0, Items["RealDropdown"].Instance.AbsoluteSize.X, 0, Items["OptionHolder"].Instance.Size.Y.Offset)
                     end)
 
                     for Index, Value in Library.OpenFrames do 
@@ -4550,15 +4550,44 @@ function Library:CreateSettingsPage(Window, Watermark)
                     local lp = game:GetService("Players").LocalPlayer
                     local name = lp.Name
                     local displayName = lp.DisplayName
+                    
+                    local function censor(v)
+                        if (v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox")) then
+                            if v.Text:find(name, 1, true) or v.Text:find(displayName, 1, true) then
+                                v.Text = v.Text:gsub(name, "Streamer"):gsub(displayName, "Streamer")
+                            end
+                        end
+                    end
+
                     while getgenv().StreamerModeEnabled do
-                        for _, v in ipairs(workspace:GetDescendants()) do
-                            if v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox") then
-                                if v.Text:find(name) or v.Text:find(displayName) then
-                                    v.Text = v.Text:gsub(name, "Streamer"):gsub(displayName, "Streamer")
+                        -- 1. Scan LocalPlayer GUI (Very fast)
+                        local pg = lp:FindFirstChild("PlayerGui")
+                        if pg then
+                            for _, v in ipairs(pg:GetDescendants()) do
+                                censor(v)
+                            end
+                        end
+                        
+                        -- 2. Scan Characters in workspace (Very fast, avoids full workspace scan)
+                        for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+                            if p.Character then
+                                for _, v in ipairs(p.Character:GetDescendants()) do
+                                    censor(v)
                                 end
                             end
                         end
-                        task.wait(0.5)
+                        
+                        -- 3. Scan CoreGui if possible (Chat, Leaderboard)
+                        local coreGui = gethui and gethui() or game:GetService("CoreGui")
+                        if coreGui then
+                            pcall(function()
+                                for _, v in ipairs(coreGui:GetDescendants()) do
+                                    censor(v)
+                                end
+                            end)
+                        end
+                        
+                        task.wait(1)
                     end
                 end)
             end

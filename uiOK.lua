@@ -4659,7 +4659,7 @@ function Library:CreateSettingsPage(Window, Watermark)
             task.spawn(function()
                 Library.Notifications:Create({Name = "Searching for new server...", LifeTime = 3})
                 local servers = {}
-                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+                local url = "https://games.roproxy.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
                 local ok, d = pcall(function() return HttpService:JSONDecode(requestAPI(url)) end)
                 if ok and d and d.data then
                     for _, s in ipairs(d.data) do
@@ -4680,7 +4680,7 @@ function Library:CreateSettingsPage(Window, Watermark)
         Callback = function()
             task.spawn(function()
                 Library.Notifications:Create({Name = "Searching for lowest server...", LifeTime = 3})
-                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+                local url = "https://games.roproxy.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
                 local ok, d = pcall(function() return HttpService:JSONDecode(requestAPI(url)) end)
                 local lowest
                 if ok and d and d.data then

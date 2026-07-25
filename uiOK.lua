@@ -3117,26 +3117,29 @@ end)
                     BackgroundColor3 = Library.Theme["Outline"]
                 }):AddToTheme({BackgroundColor3 = 'Outline'})       
                 
-                Items["OptionHolder"] = Instances:Create("TextButton", {
+                Items["OptionHolder"] = Instances:Create("ScrollingFrame", {
                     Parent = Library.UnusedHolder.Instance,
                     Name = "\0",
                     Visible = false,
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(0, 0, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Text = "",
-                    AutoButtonColor = false,
                     Size = UDim2New(0, 200, 0, 0),
                     Position = UDim2New(0, 54, 0, 236),
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.Y,
-                    TextSize = 14,
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                    CanvasSize = UDim2New(0, 0, 0, 0),
+                    ScrollBarThickness = 2,
                     BackgroundColor3 = Library.Theme["Inline"]
-                }):AddToTheme({BackgroundColor3 = 'Inline'})
+                }):AddToTheme({BackgroundColor3 = 'Inline', ScrollBarImageColor3 = 'Accent'})
                 
                 Instances:Create("UICorner", {
                     Parent = Items["OptionHolder"].Instance,
                     Name = "\0"
+                })
+                
+                Instances:Create("UISizeConstraint", {
+                    Parent = Items["OptionHolder"].Instance,
+                    MaxSize = Vector2New(9e9, 200)
                 })
                 
                 Instances:Create("UIListLayout", {
@@ -3154,6 +3157,32 @@ end)
                     PaddingRight = UDimNew(0, 10),
                     PaddingLeft = UDimNew(0, 10)
                 })
+                
+                Items["SearchBox"] = Instances:Create("TextBox", {
+                    Parent = Items["OptionHolder"].Instance,
+                    Name = "\0",
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, -5, 0, 20),
+                    PlaceholderText = "Search...",
+                    Text = "",
+                    TextColor3 = Library.Theme["Text"],
+                    PlaceholderColor3 = Library.Theme["Subtext"],
+                    FontFace = Library.Font,
+                    TextSize = 14,
+                    LayoutOrder = -1,
+                    ClearTextOnFocus = false
+                }):AddToTheme({TextColor3 = 'Text', PlaceholderColor3 = 'Subtext'})
+                
+                Items["SearchBox"].Instance:GetPropertyChangedSignal("Text"):Connect(function()
+                    local query = Items["SearchBox"].Instance.Text:lower()
+                    for _, opt in pairs(Dropdown.Options) do
+                        if query == "" or opt.Name:lower():find(query, 1, true) then
+                            opt.Button.Instance.Visible = true
+                        else
+                            opt.Button.Instance.Visible = false
+                        end
+                    end
+                end)
             end
 
             function Dropdown:Get()
@@ -3177,6 +3206,7 @@ end)
                 Debounce = true 
 
                 if Dropdown.IsOpen then 
+                    Items["SearchBox"].Instance.Text = ""
                     Items["OptionHolder"].Instance.Visible = true
                     Items["OptionHolder"].Instance.Parent = Library.Holder.Instance
                     

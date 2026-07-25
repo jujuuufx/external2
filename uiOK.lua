@@ -3188,11 +3188,10 @@ end)
                     Size = UDim2New(0, 200, 0, 0),
                     Position = UDim2New(0, 54, 0, 236),
                     BorderSizePixel = 0,
-                    AutomaticSize = Enum.AutomaticSize.Y,
-                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
                     CanvasSize = UDim2New(0, 0, 0, 0),
                     ScrollBarThickness = 2,
-                    BackgroundColor3 = Library.Theme["Inline"]
+                    BackgroundColor3 = Library.Theme["Inline"],
+                    ScrollingDirection = Enum.ScrollingDirection.Y
                 }):AddToTheme({BackgroundColor3 = 'Inline', ScrollBarImageColor3 = 'Accent'})
                 
                 Instances:Create("UICorner", {
@@ -3200,17 +3199,21 @@ end)
                     Name = "\0"
                 })
                 
-                Instances:Create("UISizeConstraint", {
-                    Parent = Items["OptionHolder"].Instance,
-                    MaxSize = Vector2New(9e9, 200)
-                })
+                -- We'll manually manage the size up to a max of 200, so we don't need UISizeConstraint for this, but we can keep it just in case.
                 
-                Instances:Create("UIListLayout", {
+                local listLayout = Instances:Create("UIListLayout", {
                     Parent = Items["OptionHolder"].Instance,
                     Name = "\0",
                     Padding = UDimNew(0, 6),
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
+                
+                listLayout.Instance:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                    local contentSize = listLayout.Instance.AbsoluteContentSize.Y + 20 -- Padding top/bottom 10
+                    Items["OptionHolder"].Instance.CanvasSize = UDim2New(0, 0, 0, contentSize)
+                    local newHeight = math.min(contentSize, 200)
+                    Items["OptionHolder"].Instance.Size = UDim2New(0, 200, 0, newHeight)
+                end)
                 
                 Instances:Create("UIPadding", {
                     Parent = Items["OptionHolder"].Instance,

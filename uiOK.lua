@@ -4536,6 +4536,32 @@ function Library:CreateSettingsPage(Window, Watermark)
         end
     })
 
+    UISection:Toggle({
+        Name = "Streamer / Anonymous Mode",
+        Flag = "UI_AnonymousMode",
+        Default = false,
+        Callback = function(state)
+            getgenv().StreamerModeEnabled = state
+            if state then
+                task.spawn(function()
+                    local lp = game:GetService("Players").LocalPlayer
+                    local name = lp.Name
+                    local displayName = lp.DisplayName
+                    while getgenv().StreamerModeEnabled do
+                        for _, v in ipairs(workspace:GetDescendants()) do
+                            if v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox") then
+                                if v.Text:find(name) or v.Text:find(displayName) then
+                                    v.Text = v.Text:gsub(name, "Streamer"):gsub(displayName, "Streamer")
+                                end
+                            end
+                        end
+                        task.wait(0.5)
+                    end
+                end)
+            end
+        end
+    })
+
     local ServerSection = Page:Section({Name = "Server", Side = "Right"})
 
     local function requestAPI(url)

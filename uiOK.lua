@@ -1230,7 +1230,11 @@ local Library do
 
         function Colorpicker:Set(Color)
             if type(Color) == "table" then
-                Color = FromRGB(Color[1], Color[2], Color[3])
+                if Color.Color and typeof(Color.Color) == "Color3" then
+                    Color = Color.Color
+                else
+                    Color = FromRGB(Color[1] or 255, Color[2] or 255, Color[3] or 255)
+                end
             elseif type(Color) == "string" then
                 local safeHex = string.gsub(Color, "#", "")
                 local success, result = pcall(function() return FromHex(safeHex) end)

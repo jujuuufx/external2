@@ -1232,7 +1232,13 @@ local Library do
             if type(Color) == "table" then
                 Color = FromRGB(Color[1], Color[2], Color[3])
             elseif type(Color) == "string" then
-                Color = FromHex(Color)
+                local safeHex = string.gsub(Color, "#", "")
+                local success, result = pcall(function() return FromHex(safeHex) end)
+                if success and typeof(result) == "Color3" then
+                    Color = result
+                else
+                    Color = Color3.fromRGB(255, 255, 255)
+                end
             end 
 
             Colorpicker.Hue, Colorpicker.Saturation, Colorpicker.Value = Color:ToHSV()

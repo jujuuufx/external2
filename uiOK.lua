@@ -2132,6 +2132,69 @@ end)
 
             Window:SetCenter()
             task.wait()
+            if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+                task.spawn(function()
+                    local CoreGui = cloneref and cloneref(game:GetService("CoreGui")) or game:GetService("CoreGui")
+                    local ScreenGui = Instance.new("ScreenGui")
+                    ScreenGui.Name = "PurpleUIMobileToggle"
+                    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                    
+                    local success = pcall(function() ScreenGui.Parent = CoreGui end)
+                    if not success then ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui", 9e9) end
+                    
+                    local ToggleButton = Instance.new("ImageButton")
+                    ToggleButton.Name = "ToggleButton"
+                    ToggleButton.Parent = ScreenGui
+                    ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                    ToggleButton.Position = UDim2.new(0.5, -25, 0, 20)
+                    ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+                    ToggleButton.Image = Window.Logo
+                    
+                    local UICorner = Instance.new("UICorner")
+                    UICorner.CornerRadius = UDim.new(0, 12)
+                    UICorner.Parent = ToggleButton
+                    
+                    local UIStroke = Instance.new("UIStroke")
+                    UIStroke.Color = Color3.fromRGB(100, 100, 100)
+                    UIStroke.Thickness = 1.5
+                    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                    UIStroke.Parent = ToggleButton
+                    
+                    local dragging = false
+                    local dragInput, dragStart, startPos
+                    
+                    ToggleButton.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                            dragging = true
+                            dragStart = input.Position
+                            startPos = ToggleButton.Position
+                            input.Changed:Connect(function()
+                                if input.UserInputState == Enum.UserInputState.End then
+                                    dragging = false
+                                end
+                            end)
+                        end
+                    end)
+                    
+                    ToggleButton.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                            dragInput = input
+                        end
+                    end)
+                    
+                    UserInputService.InputChanged:Connect(function(input)
+                        if input == dragInput and dragging then
+                            local delta = input.Position - dragStart
+                            ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                        end
+                    end)
+                    
+                    ToggleButton.MouseButton1Click:Connect(function()
+                        Window:SetOpen(not Window.IsOpen)
+                    end)
+                end)
+            end
+
             Window:SetOpen(true)
             return setmetatable(Window, Library)
         end

@@ -1938,18 +1938,22 @@ Countdown.TextSize = 13
 Countdown.TextColor3 = Library.Theme.Accent
 
 --// COUNTDOWN LOGIC
-local expiresDuration = tonumber(Data.ExpiresSeconds) or (24 * 60 * 60)
-local endTime = os.time() + math.max(0, math.floor(expiresDuration))
-
-RunService.Heartbeat:Connect(function()
-    local remaining = math.max(0, endTime - os.time())
-
-    local hours = math.floor(remaining / 3600)
-    local minutes = math.floor((remaining % 3600) / 60)
-    local seconds = remaining % 60
-
-    Countdown.Text = string.format("%02dh %02dm %02ds", hours, minutes, seconds)
-end)
+if Data.ExpiresText then
+    Countdown.Text = Data.ExpiresText
+else
+    local expiresDuration = tonumber(Data.ExpiresSeconds) or (24 * 60 * 60)
+    local endTime = os.time() + math.max(0, math.floor(expiresDuration))
+    
+    RunService.Heartbeat:Connect(function()
+        local remaining = math.max(0, endTime - os.time())
+    
+        local hours = math.floor(remaining / 3600)
+        local minutes = math.floor((remaining % 3600) / 60)
+        local seconds = remaining % 60
+    
+        Countdown.Text = string.format("%02dh %02dm %02ds", hours, minutes, seconds)
+    end)
+end
 
                 Instances:Create("Frame", {
                     Parent = Items["Sidebar"].Instance,
@@ -3198,8 +3202,6 @@ end)
                     Parent = Items["OptionHolder"].Instance,
                     Name = "\0"
                 })
-                
-                -- We'll manually manage the size up to a max of 200, so we don't need UISizeConstraint for this, but we can keep it just in case.
                 
                 local listLayout = Instances:Create("UIListLayout", {
                     Parent = Items["OptionHolder"].Instance,
@@ -4557,7 +4559,6 @@ function Library:CreateSettingsPage(Window, Watermark)
                     end
 
                     while getgenv().StreamerModeEnabled do
-                        -- 1. Scan LocalPlayer GUI (Very fast)
                         local pg = lp:FindFirstChild("PlayerGui")
                         if pg then
                             for _, v in ipairs(pg:GetDescendants()) do
@@ -4565,7 +4566,6 @@ function Library:CreateSettingsPage(Window, Watermark)
                             end
                         end
                         
-                        -- 2. Scan Characters in workspace (Very fast, avoids full workspace scan)
                         for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
                             if p.Character then
                                 for _, v in ipairs(p.Character:GetDescendants()) do
@@ -4574,7 +4574,6 @@ function Library:CreateSettingsPage(Window, Watermark)
                             end
                         end
                         
-                        -- 3. Scan CoreGui if possible (Chat, Leaderboard)
                         local coreGui = gethui and gethui() or game:GetService("CoreGui")
                         if coreGui then
                             pcall(function()
@@ -4585,6 +4584,39 @@ function Library:CreateSettingsPage(Window, Watermark)
                         end
                         
                         task.wait(1)
+                    end
+                    
+                    -- Revert the text when toggled off
+                    local function uncensor(v)
+                        if (v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox")) then
+                            if v.Text:find("Streamer", 1, true) then
+                                v.Text = v.Text:gsub("Streamer", displayName)
+                            end
+                        end
+                    end
+
+                    local pg = lp:FindFirstChild("PlayerGui")
+                    if pg then
+                        for _, v in ipairs(pg:GetDescendants()) do
+                            uncensor(v)
+                        end
+                    end
+                    
+                    for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+                        if p.Character then
+                            for _, v in ipairs(p.Character:GetDescendants()) do
+                                uncensor(v)
+                            end
+                        end
+                    end
+                    
+                    local coreGui = gethui and gethui() or game:GetService("CoreGui")
+                    if coreGui then
+                        pcall(function()
+                            for _, v in ipairs(coreGui:GetDescendants()) do
+                                uncensor(v)
+                            end
+                        end)
                     end
                 end)
             end

@@ -4186,7 +4186,7 @@ function Library.Notifications:RefreshNotifications()
     local offset = 20
     for _, v in ipairs(self.Notifs) do
         local ySize = math.max(v.AbsoluteSize.Y, 36)
-        TweenService:Create(v, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(1, -20, 1, -offset)}):Play()
+        game:GetService("TweenService"):Create(v, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(1, -20, 1, -offset)}):Play()
         offset = offset + (ySize + 8)
     end
 end
@@ -4255,12 +4255,12 @@ function Library.Notifications:Create(properties)
     table.insert(self.Notifs, Outline)
     
     task.spawn(function()
-        RunService.RenderStepped:Wait()
+        game:GetService("RunService").RenderStepped:Wait()
         Outline.Position = UDim2.new(1, 300, 1, -20)
         self:RefreshNotifications()
-        TweenService:Create(TimeBar, TweenInfo.new(Lifetime, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+        game:GetService("TweenService"):Create(TimeBar, TweenInfo.new(Lifetime, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
         task.wait(Lifetime)
-        TweenService:Create(Outline, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, 300, Outline.Position.Y.Offset)}):Play()
+        game:GetService("TweenService"):Create(Outline, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, 300, Outline.Position.Y.Offset)}):Play()
         task.wait(0.25)
         local idx = table.find(self.Notifs, Outline)
         if idx then table.remove(self.Notifs, idx) end
@@ -4312,11 +4312,11 @@ function Library:GetConfig()
             data[idx] = SerializeData(val)
         end
     end
-    return HttpService:JSONEncode(data)
+    return game:GetService("HttpService"):JSONEncode(data)
 end
 
 function Library:LoadConfig(json)
-    local ok, data = pcall(function() return HttpService:JSONDecode(json) end)
+    local ok, data = pcall(function() return game:GetService("HttpService"):JSONDecode(json) end)
     if not ok or type(data) ~= "table" then return end
     for idx, val in pairs(data) do
         if idx == "config_Name_list" or idx == "config_Name_text" then continue end

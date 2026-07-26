@@ -3391,6 +3391,7 @@ end
             end
 
             function Dropdown:Add(Option)
+                if not Library then return end
                 local OptionButton = Instances:Create("TextButton", {
                     Parent = Items["OptionHolder"].Instance,
                     Name = "\0",

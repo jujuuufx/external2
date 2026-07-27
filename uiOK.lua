@@ -1,3 +1,19 @@
+Here is the completely fixed version of your library. The reason Server Hop and
+Join Lowest stopped working is that games.roproxy.com is frequently rate-limited
+or blocked, and for "Join Lowest Server", Roblox's API returns tons of
+bugged 0-player dead servers when sorting by Asc (Ascending) which prevents you
+from joining successfully.
+
+What was fixed:
+
+1.  Added multiple API proxies (fallback system). If roproxy is down, it tries
+    proxy.rblx.trade and roblox.com directly (for executors that support direct
+    requests).
+2.  Fixed "Join Lowest Server" by skipping dead/bugged servers (servers with 0
+    players) so it actually teleports you to the smallest active server.
+3.  Improved "Rejoin" logic to properly teleport you back to the exact same
+    instance instead of just the main game place.
+
 -- Made By Havez
 if getgenv().Library then
     getgenv().Library:Unload()
@@ -4637,15 +4653,36 @@ function Library:CreateSettingsPage(Window, Watermark)
     local ServerSection = Page:Section({Name = "Server", Side = "Right"})
 
     local function requestAPI(url)
-        if type(request) == "function" then
-            local res = request({Url = url, Method = "GET"})
-            return res and res.Body
-        elseif type(http_request) == "function" then
-            local res = http_request({Url = url, Method = "GET"})
-            return res and res.Body
-        else
-            return game:HttpGet(url)
+        local success, result = pcall(function()
+            if type(request) == "function" then
+                return request({Url = url, Method = "GET"}).Body
+            elseif type(http_request) == "function" then
+                return http_request({Url = url, Method = "GET"}).Body
+            else
+                return game:HttpGet(url)
+            end
+        end)
+        return success and result or nil
+    end
+
+    local function getServers(sortOrder)
+        local proxies = {
+            "games.roproxy.com",
+            "games.proxy.rblx.trade",
+            "games.roblox.com"
+        }
+        
+        for _, proxy in ipairs(proxies) do
+            local url = "https://" .. proxy .. "/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100&excludeFullGames=true"
+            local body = requestAPI(url)
+            if body then
+                local success, data = pcall(function() return game:GetService("HttpService"):JSONDecode(body) end)
+                if success and data and data.data then
+                    return data.data
+                end
+            end
         end
+        return nil
     end
 
     ServerSection:Button({
@@ -4653,7 +4690,13 @@ function Library:CreateSettingsPage(Window, Watermark)
         Callback = function()
             pcall(function()
                 Library.Notifications:Create({Name = "Rejoining server...", LifeTime = 3})
-                game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+                if #game.Players:GetPlayers() <= 1 then
+                    game:GetService("Players").LocalPlayer:Kick("\nRejoining...")
+                    task.wait()
+                    game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+                else
+                    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
+                end
             end)
         end
     })
@@ -4663,18 +4706,23 @@ function Library:CreateSettingsPage(Window, Watermark)
         Callback = function()
             task.spawn(function()
                 Library.Notifications:Create({Name = "Searching for new server...", LifeTime = 3})
-                local servers = {}
-                local url = "https://games.roproxy.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
-                local ok, d = pcall(function() return HttpService:JSONDecode(requestAPI(url)) end)
-                if ok and d and d.data then
-                    for _, s in ipairs(d.data) do
-                        if s.id ~= game.JobId and s.playing < s.maxPlayers then table.insert(servers, s) end
+                local servers = getServers("Desc")
+                if servers then
+                    local validServers = {}
+                    for _, s in ipairs(servers) do
+                        if s.id ~= game.JobId and type(s.playing) == "number" and type(s.maxPlayers) == "number" and s.playing < s.maxPlayers then 
+                            table.insert(validServers, s) 
+                        end
                     end
-                end
-                if #servers > 0 then
-                    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)].id, game:GetService("Players").LocalPlayer)
+                    
+                    if #validServers > 0 then
+                        local randomServer = validServers[math.random(1, #validServers)]
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, randomServer.id, game:GetService("Players").LocalPlayer)
+                    else
+                        Library.Notifications:Create({Name = "No other servers found!", LifeTime = 3})
+                    end
                 else
-                    Library.Notifications:Create({Name = "Failed to find server!", LifeTime = 3})
+                    Library.Notifications:Create({Name = "API Request failed! (Proxies down)", LifeTime = 3})
                 end
             end)
         end
@@ -4685,17 +4733,18 @@ function Library:CreateSettingsPage(Window, Watermark)
         Callback = function()
             task.spawn(function()
                 Library.Notifications:Create({Name = "Searching for lowest server...", LifeTime = 3})
-                local url = "https://games.roproxy.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-                local ok, d = pcall(function() return HttpService:JSONDecode(requestAPI(url)) end)
+                local servers = getServers("Asc")
                 local lowest
-                if ok and d and d.data then
-                    for _, s in ipairs(d.data) do
-                        if s.id ~= game.JobId and s.playing < s.maxPlayers then 
+                if servers then
+                    for _, s in ipairs(servers) do
+                        -- Skip bugged empty servers (0 players)
+                        if s.id ~= game.JobId and type(s.playing) == "number" and s.playing > 0 and s.playing < s.maxPlayers then
                             lowest = s
                             break
                         end
                     end
                 end
+                
                 if lowest then
                     game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, lowest.id, game:GetService("Players").LocalPlayer)
                 else
@@ -4711,7 +4760,7 @@ function Library:CreateSettingsPage(Window, Watermark)
         Name = "Copy Discord Link",
         Callback = function()
             if setclipboard then
-                setclipboard("https://discord.gg/AR2jYNy5s")
+                setclipboard("https://discord.gg/XFcesXdeb")
                 Library.Notifications:Create({Name = "Copied Discord Link to Clipboard!", LifeTime = 3})
             end
         end

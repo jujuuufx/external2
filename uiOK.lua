@@ -1,19 +1,3 @@
-Here is the completely fixed version of your library. The reason Server Hop and
-Join Lowest stopped working is that games.roproxy.com is frequently rate-limited
-or blocked, and for "Join Lowest Server", Roblox's API returns tons of
-bugged 0-player dead servers when sorting by Asc (Ascending) which prevents you
-from joining successfully.
-
-What was fixed:
-
-1.  Added multiple API proxies (fallback system). If roproxy is down, it tries
-    proxy.rblx.trade and roblox.com directly (for executors that support direct
-    requests).
-2.  Fixed "Join Lowest Server" by skipping dead/bugged servers (servers with 0
-    players) so it actually teleports you to the smallest active server.
-3.  Improved "Rejoin" logic to properly teleport you back to the exact same
-    instance instead of just the main game place.
-
 -- Made By Havez
 if getgenv().Library then
     getgenv().Library:Unload()

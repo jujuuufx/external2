@@ -58,6 +58,27 @@ local Library do
 
     local RectNew = Rect.new
 
+    local _isMobileDevice = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+    local _touchIsSwiping = false
+    if _isMobileDevice then
+        local _touchOrigin = Vector2New(0, 0)
+        UserInputService.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                _touchIsSwiping = false
+                _touchOrigin = input.Position
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch and not _touchIsSwiping then
+                local dx = MathAbs(input.Position.X - _touchOrigin.X)
+                local dy = MathAbs(input.Position.Y - _touchOrigin.Y)
+                if dx > 10 or dy > 10 then
+                    _touchIsSwiping = true
+                end
+            end
+        end)
+    end
+
     Library = {
         Theme =  { },
 
@@ -353,28 +374,12 @@ local Library do
                 return
             end
 
-            if Event == "MouseButton1Down" and UserInputService.TouchEnabled then
-                local TAP_THRESHOLD = 10
-                local wrappedCb = function(...)
-                    local args = table.pack(...)
-                    local touchStart = UserInputService:GetMouseLocation()
-                    local conn
-                    conn = UserInputService.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            if conn then conn:Disconnect() conn = nil end
-                            local touchEnd = UserInputService:GetMouseLocation()
-                            local dx = math.abs(touchEnd.X - touchStart.X)
-                            local dy = math.abs(touchEnd.Y - touchStart.Y)
-                            if dx < TAP_THRESHOLD and dy < TAP_THRESHOLD then
-                                Callback(table.unpack(args, 1, args.n))
-                            end
-                        end
-                    end)
-                    task.delay(1, function()
-                        if conn then conn:Disconnect() conn = nil end
-                    end)
+            if _isMobileDevice and (Event == "MouseButton1Down" or Event == "MouseButton1Click") then
+                local guardedCb = function()
+                    if _touchIsSwiping then return end
+                    Callback()
                 end
-                return Library:Connect(self.Instance[Event], wrappedCb, Name)
+                return Library:Connect(self.Instance[Event], guardedCb, Name)
             end
 
             return Library:Connect(self.Instance[Event], Callback, Name)

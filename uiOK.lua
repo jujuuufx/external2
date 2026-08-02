@@ -353,6 +353,29 @@ local Library do
                 return
             end
 
+            if Event == "MouseButton1Down" and UserInputService.TouchEnabled then
+                local TAP_THRESHOLD = 10
+                local wrappedCb = function(...)
+                    local touchStart = UserInputService:GetMouseLocation()
+                    local conn
+                    conn = UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            if conn then conn:Disconnect() conn = nil end
+                            local touchEnd = UserInputService:GetMouseLocation()
+                            local dx = math.abs(touchEnd.X - touchStart.X)
+                            local dy = math.abs(touchEnd.Y - touchStart.Y)
+                            if dx < TAP_THRESHOLD and dy < TAP_THRESHOLD then
+                                Callback(...)
+                            end
+                        end
+                    end)
+                    task.delay(1, function()
+                        if conn then conn:Disconnect() conn = nil end
+                    end)
+                end
+                return Library:Connect(self.Instance[Event], wrappedCb, Name)
+            end
+
             return Library:Connect(self.Instance[Event], Callback, Name)
         end
 
@@ -390,6 +413,8 @@ local Library do
             local Dragging = false 
             local DragStart
             local StartPosition 
+            local DragConfirmed = false
+            local DRAG_DEADZONE = 12
         
             local Set = function(Input)
                 local DragDelta = Input.Position - DragStart
@@ -410,6 +435,7 @@ local Library do
             self:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     Dragging = true
+                    DragConfirmed = false
                     DragStart = Input.Position
                     StartPosition = Gui.Position
         
@@ -420,6 +446,7 @@ local Library do
                     InputChanged = Input.Changed:Connect(function()
                         if Input.UserInputState == Enum.UserInputState.End then
                             Dragging = false
+                            DragConfirmed = false
                             InputChanged:Disconnect()
                             InputChanged = nil
                         end
@@ -430,6 +457,14 @@ local Library do
             Library:Connect(UserInputService.InputChanged, function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
                     if Dragging then
+                        if not DragConfirmed then
+                            local delta = Input.Position - DragStart
+                            if math.abs(delta.X) > DRAG_DEADZONE or math.abs(delta.Y) > DRAG_DEADZONE then
+                                DragConfirmed = true
+                            else
+                                return
+                            end
+                        end
                         Set(Input)
                     end
                 end

@@ -1843,19 +1843,37 @@ local Library do
             }
 
             local Items = { } do
+                local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+                local viewport = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2New(800, 600)
+                
+                local defaultWidth = isMobile and math.clamp(math.floor(viewport.X * 0.72), 400, 560) or 673
+                local defaultHeight = isMobile and math.clamp(math.floor(viewport.Y * 0.78), 270, 420) or 511
+                local winSize = Data.Size or UDim2New(0, defaultWidth, 0, defaultHeight)
+                local sidebarWidth = isMobile and 155 or 200
+
                 Items["MainFrame"] = Instances:Create("Frame", {
                     Parent = Library.Holder.Instance,
                     Name = "\0",
                     AnchorPoint = Vector2New(0.5, 0.5),
-                    Position = UDim2New(0.5220375657081604, 0, 0.5, 0),
+                    Position = UDim2New(0.5, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 673, 0, 511),
+                    Size = winSize,
                     BorderSizePixel = 0,
                     BackgroundColor3 = Library.Theme["Background"]
                 }):AddToTheme({BackgroundColor3 = 'Background'})
 
+                local uiScale = Instance.new("UIScale")
+                uiScale.Parent = Items["MainFrame"].Instance
+                if isMobile and viewport.Y < 480 then
+                    uiScale.Scale = math.clamp(viewport.Y / 480, 0.75, 1.0)
+                else
+                    uiScale.Scale = 1.0
+                end
+
                 Items["MainFrame"]:MakeDraggable()
-                Items["MainFrame"]:MakeResizeable(Vector2New(673, 511), Vector2New(9999, 9999))
+                local minResizeX = isMobile and 350 or 500
+                local minResizeY = isMobile and 240 or 380
+                Items["MainFrame"]:MakeResizeable(Vector2New(minResizeX, minResizeY), Vector2New(9999, 9999))
                 
                 Instances:Create("UICorner", {
                     Parent = Items["MainFrame"].Instance,
@@ -1868,7 +1886,7 @@ local Library do
                     Name = "\0",
                     BackgroundTransparency = 1,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 200, 1, 0),
+                    Size = UDim2New(0, sidebarWidth, 1, 0),
                     BorderSizePixel = 0
                 })
                 
@@ -1877,7 +1895,7 @@ local Library do
 local BottomSeparator = Instance.new("Frame")
 BottomSeparator.Parent = Items["Sidebar"].Instance
 BottomSeparator.AnchorPoint = Vector2.new(0, 1)
-BottomSeparator.Position = UDim2.new(0, 0, 1, -85)
+BottomSeparator.Position = UDim2.new(0, 0, 1, isMobile and -68 or -85)
 BottomSeparator.Size = UDim2.new(1, 0, 0, 1)
 BottomSeparator.BackgroundColor3 = Library.Theme.Outline
 BottomSeparator.BorderSizePixel = 0
@@ -1890,17 +1908,18 @@ local LocalPlayer = Players.LocalPlayer
 local BottomTab = Instance.new("Frame")
 BottomTab.Parent = Items["Sidebar"].Instance
 BottomTab.AnchorPoint = Vector2.new(0, 1)
-BottomTab.Position = UDim2.new(0, 0, 1, 20)
+BottomTab.Position = UDim2.new(0, 0, 1, isMobile and 15 or 20)
 
-BottomTab.Size = UDim2.new(1, 0, 0, 105)
+BottomTab.Size = UDim2.new(1, 0, 0, isMobile and 82 or 105)
 BottomTab.BackgroundTransparency = 1
 
 -- Avatar (BIGGER)
 local Avatar = Instance.new("ImageLabel")
 Avatar.Parent = BottomTab
 Avatar.BackgroundTransparency = 1
-Avatar.Size = UDim2.new(0, 52, 0, 52)
-Avatar.Position = UDim2.new(0, 12, 0, 12)
+local avSize = isMobile and 38 or 52
+Avatar.Size = UDim2.new(0, avSize, 0, avSize)
+Avatar.Position = UDim2.new(0, isMobile and 8 or 12, 0, isMobile and 8 or 12)
 Avatar.Image = Players:GetUserThumbnailAsync(
     LocalPlayer.UserId,
     Enum.ThumbnailType.HeadShot,
@@ -1915,24 +1934,24 @@ AvatarCorner.Parent = Avatar
 local Username = Instance.new("TextLabel")
 Username.Parent = BottomTab
 Username.BackgroundTransparency = 1
-Username.Position = UDim2.new(0, 74, 0, 16)
-Username.Size = UDim2.new(1, -84, 0, 18)
+Username.Position = UDim2.new(0, isMobile and 52 or 74, 0, isMobile and 10 or 16)
+Username.Size = UDim2.new(1, isMobile and -58 or -84, 0, isMobile and 15 or 18)
 Username.TextXAlignment = Enum.TextXAlignment.Left
 Username.Text = LocalPlayer.Name
 Username.FontFace = Library.Font
-Username.TextSize = 16
+Username.TextSize = isMobile and 14 or 16
 Username.TextColor3 = Library.Theme.Text
 
 -- Expires label
 local ExpiresLabel = Instance.new("TextLabel")
 ExpiresLabel.Parent = BottomTab
 ExpiresLabel.BackgroundTransparency = 1
-ExpiresLabel.Position = UDim2.new(0, 74, 0, 38)
-ExpiresLabel.Size = UDim2.new(0, 52, 0, 16)
+ExpiresLabel.Position = UDim2.new(0, isMobile and 52 or 74, 0, isMobile and 28 or 38)
+ExpiresLabel.Size = UDim2.new(0, isMobile and 45 or 52, 0, 16)
 ExpiresLabel.TextXAlignment = Enum.TextXAlignment.Left
 ExpiresLabel.Text = "Expires:"
 ExpiresLabel.FontFace = Library.Font
-ExpiresLabel.TextSize = 13
+ExpiresLabel.TextSize = isMobile and 11 or 13
 ExpiresLabel.TextTransparency = 0.4
 ExpiresLabel.TextColor3 = Library.Theme.Text
 
@@ -1940,11 +1959,11 @@ ExpiresLabel.TextColor3 = Library.Theme.Text
 local Countdown = Instance.new("TextLabel")
 Countdown.Parent = BottomTab
 Countdown.BackgroundTransparency = 1
-Countdown.Position = UDim2.new(0, 120, 0, 38)
-Countdown.Size = UDim2.new(1, -140, 0, 16)
+Countdown.Position = UDim2.new(0, isMobile and 96 or 120, 0, isMobile and 28 or 38)
+Countdown.Size = UDim2.new(1, isMobile and -102 or -140, 0, 16)
 Countdown.TextXAlignment = Enum.TextXAlignment.Left
 Countdown.FontFace = Library.Font
-Countdown.TextSize = 13
+Countdown.TextSize = isMobile and 11 or 13
 Countdown.TextColor3 = Library.Theme.Accent
 
 --// COUNTDOWN LOGIC
@@ -1981,7 +2000,7 @@ end
                     Name = "\0",
                     BackgroundTransparency = 1,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(1, 0, 0, 70),
+                    Size = UDim2New(1, 0, 0, isMobile and 56 or 70),
                     BorderSizePixel = 0
                 })
                 
@@ -1992,8 +2011,8 @@ end
                     BorderColor3 = FromRGB(0, 0, 0),
                     Image = Window.Logo,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 20, 0, 20),
-                    Size = UDim2New(0, 30, 0, 30),
+                    Position = UDim2New(0, isMobile and 12 or 20, 0, isMobile and 12 or 20),
+                    Size = UDim2New(0, isMobile and 24 or 30, 0, isMobile and 24 or 30),
                     BorderSizePixel = 0
                 })
                 
@@ -2007,10 +2026,10 @@ end
                     Size = UDim2New(0, 0, 0, 14),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 60, 0, 15),
+                    Position = UDim2New(0, isMobile and 44 or 60, 0, isMobile and 10 or 15),
                     TextWrapped = true,
                     AutomaticSize = Enum.AutomaticSize.X,
-                    TextSize = 18
+                    TextSize = isMobile and 15 or 18
                 }):AddToTheme({TextColor3 = 'Text'})
                 
                 Items["Subtitle"] = Instances:Create("TextLabel", {
@@ -2024,10 +2043,10 @@ end
                     BorderColor3 = FromRGB(0, 0, 0),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 60, 0, 36),
+                    Position = UDim2New(0, isMobile and 44 or 60, 0, isMobile and 28 or 36),
                     TextWrapped = true,
                     AutomaticSize = Enum.AutomaticSize.X,
-                    TextSize = 16
+                    TextSize = isMobile and 13 or 16
                 }):AddToTheme({TextColor3 = 'Text'})
                 
                 Instances:Create("Frame", {
@@ -2052,9 +2071,9 @@ end
                     MidImage = "rbxassetid://128693616966482",
                     BorderColor3 = FromRGB(0, 0, 0),
                     ScrollBarThickness = 3,
-                    Size = UDim2New(1, -16, 1, -185),
+                    Size = UDim2New(1, -16, 1, isMobile and -145 or -185),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 8, 0, 78),
+                    Position = UDim2New(0, 8, 0, isMobile and 62 or 78),
                     BottomImage = "rbxassetid://128693616966482",
                     TopImage = "rbxassetid://128693616966482"
                 }):AddToTheme({ScrollBarImageColor3 = 'Accent'})
@@ -2079,9 +2098,9 @@ end
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 200, 0, 0),
+                    Position = UDim2New(0, sidebarWidth, 0, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(1, -200, 1, 0),
+                    Size = UDim2New(1, -sidebarWidth, 1, 0),
                     BorderSizePixel = 0
                 })                
                 
@@ -2091,11 +2110,8 @@ end
             local Debounce = false
 
             function Window:SetCenter()
-                local CenterPosition = Items["MainFrame"].Instance.AbsolutePosition
-                task.wait()
-                Items["MainFrame"].Instance.AnchorPoint = Vector2New(0, 0)
-
-                Items["MainFrame"].Instance.Position = UDim2New(0, CenterPosition.X, 0, CenterPosition.Y)
+                Items["MainFrame"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
+                Items["MainFrame"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
             end
 
             function Window:SetOpen(Bool)

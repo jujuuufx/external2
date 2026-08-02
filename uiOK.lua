@@ -467,6 +467,8 @@ local Library do
                             local delta = Input.Position - DragStart
                             if math.abs(delta.X) > DRAG_DEADZONE or math.abs(delta.Y) > DRAG_DEADZONE then
                                 DragConfirmed = true
+                                DragStart = Input.Position
+                                StartPosition = Gui.Position
                             else
                                 return
                             end
@@ -2151,8 +2153,10 @@ end
             local Debounce = false
 
             function Window:SetCenter()
-                Items["MainFrame"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
-                Items["MainFrame"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
+                local CenterPosition = Items["MainFrame"].Instance.AbsolutePosition
+                task.wait()
+                Items["MainFrame"].Instance.AnchorPoint = Vector2New(0, 0)
+                Items["MainFrame"].Instance.Position = UDim2New(0, CenterPosition.X, 0, CenterPosition.Y)
             end
 
             function Window:SetOpen(Bool)

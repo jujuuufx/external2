@@ -420,7 +420,7 @@ local Library do
             local DragStart
             local StartPosition 
             local DragConfirmed = false
-            local DRAG_DEADZONE = 12
+            local DRAG_DEADZONE = _isMobileDevice and 12 or 0
         
             local Set = function(Input)
                 local DragDelta = Input.Position - DragStart
@@ -2898,12 +2898,16 @@ end
             end
 
             function Button:Press()
-                Items["Stroke"]:ChangeItemTheme({Color = "Accent"})
-                Items["Stroke"]:Tween(nil, {Color = Library.Theme.Accent})
+                if Items["Stroke"] then
+                    Items["Stroke"]:ChangeItemTheme({Color = "Accent"})
+                    Items["Stroke"]:Tween(nil, {Color = Library.Theme.Accent})
+                end
                 task.wait(0.1)
                 Library:SafeCall(Button.Callback)
-                Items["Stroke"]:ChangeItemTheme({Color = "Outline"})
-                Items["Stroke"]:Tween(nil, {Color = Library.Theme.Outline})
+                if Items["Stroke"] then
+                    Items["Stroke"]:ChangeItemTheme({Color = "Outline"})
+                    Items["Stroke"]:Tween(nil, {Color = Library.Theme.Outline})
+                end
             end
 
             Items["Button"]:Connect("MouseButton1Down", function()

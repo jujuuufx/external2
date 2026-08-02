@@ -356,6 +356,7 @@ local Library do
             if Event == "MouseButton1Down" and UserInputService.TouchEnabled then
                 local TAP_THRESHOLD = 10
                 local wrappedCb = function(...)
+                    local args = table.pack(...)
                     local touchStart = UserInputService:GetMouseLocation()
                     local conn
                     conn = UserInputService.InputEnded:Connect(function(input)
@@ -365,7 +366,7 @@ local Library do
                             local dx = math.abs(touchEnd.X - touchStart.X)
                             local dy = math.abs(touchEnd.Y - touchStart.Y)
                             if dx < TAP_THRESHOLD and dy < TAP_THRESHOLD then
-                                Callback(...)
+                                Callback(table.unpack(args, 1, args.n))
                             end
                         end
                     end)

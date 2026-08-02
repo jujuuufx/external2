@@ -4649,21 +4649,49 @@ function Library:CreateSettingsPage(Window, Watermark)
         return success and result or nil
     end
 
-    local function getServers(sortOrder)
+    local function getServers(sortOrder, maxPages)
         local proxies = {
+            "games.roblox.com",
             "games.roproxy.com",
-            "games.proxy.rblx.trade",
-            "games.roblox.com"
+            "games.proxy.rblx.trade"
         }
+        sortOrder = sortOrder or "Desc"
+        maxPages = maxPages or 1
         
         for _, proxy in ipairs(proxies) do
-            local url = "https://" .. proxy .. "/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100&excludeFullGames=true"
-            local body = requestAPI(url)
-            if body then
-                local success, data = pcall(function() return game:GetService("HttpService"):JSONDecode(body) end)
-                if success and data and data.data then
-                    return data.data
+            local allServers = {}
+            local cursor = ""
+            local pageCount = 0
+            local failed = false
+            
+            while pageCount < maxPages do
+                pageCount = pageCount + 1
+                local cursorParam = (cursor ~= "") and ("&cursor=" .. cursor) or ""
+                local url = "https://" .. proxy .. "/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100&excludeFullGames=true" .. cursorParam
+                local body = requestAPI(url)
+                if body then
+                    local success, data = pcall(function() return game:GetService("HttpService"):JSONDecode(body) end)
+                    if success and data and data.data then
+                        for _, s in ipairs(data.data) do
+                            table.insert(allServers, s)
+                        end
+                        if data.nextPageCursor and type(data.nextPageCursor) == "string" and data.nextPageCursor ~= "" then
+                            cursor = data.nextPageCursor
+                        else
+                            break
+                        end
+                    else
+                        failed = true
+                        break
+                    end
+                else
+                    failed = true
+                    break
                 end
+            end
+            
+            if not failed and #allServers > 0 then
+                return allServers
             end
         end
         return nil
@@ -4680,6 +4708,57 @@ function Library:CreateSettingsPage(Window, Watermark)
                     game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
                 else
                     game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
+                end
+            end)
+        end
+    })
+
+    ServerSection:Button({
+        Name = "Join Lowest Ping Server",
+        Callback = function()
+            task.spawn(function()
+                Library.Notifications:Create({Name = "Scanning for lowest ping server (best region)...", LifeTime = 4})
+                local servers = getServers("Desc", 3)
+                local bestServer = nil
+                local lowestPing = math.huge
+                
+                if servers then
+                    for _, s in ipairs(servers) do
+                        if s.id ~= game.JobId and type(s.playing) == "number" and s.playing > 0 and s.playing < s.maxPlayers then
+                            local ping = tonumber(s.ping)
+                            if ping and ping > 0 then
+                                if ping < lowestPing then
+                                    lowestPing = ping
+                                    bestServer = s
+                                end
+                            end
+                        end
+                    end
+                    
+                    if not bestServer then
+                        local highestFps = 0
+                        for _, s in ipairs(servers) do
+                            if s.id ~= game.JobId and type(s.playing) == "number" and s.playing > 0 and s.playing < s.maxPlayers then
+                                local fps = tonumber(s.fps) or 60
+                                if fps > highestFps then
+                                    highestFps = fps
+                                    bestServer = s
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                if bestServer then
+                    local pingInfo = (lowestPing ~= math.huge) and (tostring(math.floor(lowestPing)) .. "ms ping") or "optimal connection"
+                    Library.Notifications:Create({
+                        Name = "Found server: " .. pingInfo .. " (" .. tostring(bestServer.playing) .. "/" .. tostring(bestServer.maxPlayers) .. " plrs). Teleporting...",
+                        LifeTime = 4
+                    })
+                    task.wait(0.5)
+                    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, bestServer.id, game:GetService("Players").LocalPlayer)
+                else
+                    Library.Notifications:Create({Name = "Failed to find lowest ping server!", LifeTime = 3})
                 end
             end)
         end
@@ -4713,10 +4792,10 @@ function Library:CreateSettingsPage(Window, Watermark)
     })
 
     ServerSection:Button({
-        Name = "Join Lowest Server",
+        Name = "Join Lowest Player Server",
         Callback = function()
             task.spawn(function()
-                Library.Notifications:Create({Name = "Searching for lowest server...", LifeTime = 3})
+                Library.Notifications:Create({Name = "Searching for lowest player server...", LifeTime = 3})
                 local servers = getServers("Asc")
                 local lowest
                 if servers then
@@ -4732,7 +4811,7 @@ function Library:CreateSettingsPage(Window, Watermark)
                 if lowest then
                     game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, lowest.id, game:GetService("Players").LocalPlayer)
                 else
-                    Library.Notifications:Create({Name = "Failed to find lowest server!", LifeTime = 3})
+                    Library.Notifications:Create({Name = "Failed to find lowest player server!", LifeTime = 3})
                 end
             end)
         end

@@ -1,3 +1,34 @@
+--!strict
+--[[
+	NewUI.lua v2.0 — standalone Roblox UI library
+	=============================================
+	Usage:
+		local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/jujuuufx/external2/refs/heads/main/testuiunfinished.lua"))()
+		local Window = Library:CreateWindow({
+			Title = "EXTERNAL // v2.0",
+			SubTitle = "Private Build",
+			Accent = Color3.fromRGB(130, 80, 255),
+			Keybind = Enum.KeyCode.RightControl,
+			AnimatedTitle = true,
+			TitleAnimationType = "Typewriter", -- "Typewriter" | "GradientShift" | "Glow"
+		})
+		local Tab = Window:AddTab("Main")
+		local Section = Tab:AddSection("Settings", "A tooltip for this section")
+		Section:AddToggle({ Text = "Enabled", Flag = "enabled", Default = true, Callback = function(v) end })
+		Section:AddSlider({ Text = "Speed", Min = 0, Max = 100, Default = 50, Unit = "%", Flag = "speed" })
+		Section:AddDropdown({ Text = "Mode", Items = { "A", "B" }, Default = "A", Flag = "mode" })
+		Section:AddKeybind({ Text = "Toggle", Mode = "Toggle", Default = Enum.KeyCode.RightShift, Flag = "key" })
+		Section:AddColorPicker({ Text = "Color", Default = Color3.new(1, 0, 0), Flag = "color" })
+		Section:AddTextbox({ Text = "Name", Placeholder = "input...", Flag = "name" })
+		Section:AddButton({ Text = "Do Thing", Callback = function() end })
+		Window:AddConfigSection(Tab, "Configs")
+		Library:Notify({ Title = "Loaded", Content = "NewUI ready", Duration = 3, Type = "Success" })
+
+		Library:SaveConfig("my-config"); Library:LoadConfig("my-config")
+		Library:SetAccent(Color3.fromRGB(255, 80, 130))
+		Library:Destroy()
+]]
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -2676,7 +2707,8 @@ local function BuildWindow(opts: any): any
 
 	-- ============ ANIMATED TITLE ============
 
-	local function StartTitleAnimation(win: any): () -> nil
+	local StartTitleAnimation: (win: any) -> () = nil
+	StartTitleAnimation = function(win: any)
 		local myGen = win._TitleGen
 		local fullText = win.Title
 

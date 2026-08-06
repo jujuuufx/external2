@@ -3,7 +3,7 @@
 	NewUI.lua v2.0 — standalone Roblox UI library
 	=============================================
 	Usage:
-		local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/jujuuufx/external2/refs/heads/main/testuiunfinished.lua"))()
+		local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/your/repo/NewUI.lua"))()
 		local Window = Library:CreateWindow({
 			Title = "EXTERNAL // v2.0",
 			SubTitle = "Private Build",
@@ -444,22 +444,22 @@ local function BuildElement(section: any, height: number, class: string): any
 	})
 	TableInsert(section.Elements, element)
 	TableInsert(Lib.Elements, element)
-	element:Connect = function(_, signal: any, fn: any): RBXScriptConnection
+	element.Connect = function(_, signal: any, fn: any): RBXScriptConnection
 		local conn = signal:Connect(fn)
 		TableInsert(element.Connections, conn)
 		TableInsert(Lib.Connections, conn)
 		return conn
 	end
-	element:FireCallbacks = function(_, ...: any)
+	element.FireCallbacks = function(_, ...: any)
 		for _, cb in element.Callbacks do
 			pcall(cb, ...)
 		end
 	end
-	element:OnChanged = function(_, cb: any)
+	element.OnChanged = function(_, cb: any)
 		TableInsert(element.Callbacks, cb)
 		return element
 	end
-	element:Destroy = function()
+	element.Destroy = function()
 		if element.Destroyed then
 			return
 		end
@@ -705,22 +705,22 @@ local function BuildToggle(section: any, opts: any): any
 		}))
 	end
 
-	element:SetValue = function(_, newValue: boolean)
+	element.SetValue = function(_, newValue: boolean)
 		value = newValue and true or false
 		Paint()
 		LibUpdateFlag(element)
 		return element
 	end
-	element:GetValue = function()
+	element.GetValue = function()
 		return value
 	end
-	element:Serialize = function()
+	element.Serialize = function()
 		return value
 	end
-	element:RefreshTheme = function()
+	element.RefreshTheme = function()
 		Paint()
 	end
-	element:AddKeybind = function(_, keyopts: any)
+	element.AddKeybind = function(_, keyopts: any)
 		local keyDefaults = keyopts or {}
 		local chip = New("TextButton", element.Object, {
 			Size = UDim2.fromOffset(40, 18),
@@ -778,7 +778,7 @@ local function BuildToggle(section: any, opts: any): any
 				element:FireCallbacks(value)
 			end
 		end)
-		element:SetKey = function(_, key: any)
+		element.SetKey = function(_, key: any)
 			if TypeOf(key) == "string" then
 				key = KeyFromName(key)
 			end
@@ -787,16 +787,16 @@ local function BuildToggle(section: any, opts: any): any
 			LibUpdateFlag(element)
 			return element
 		end
-		element:GetKey = function()
+		element.GetKey = function()
 			return boundKey
 		end
-		element:Serialize = function()
+		element.Serialize = function()
 			if boundKey ~= nil and TypeOf(boundKey) == "EnumItem" then
 				return boundKey.Name
 			end
 			return value
 		end
-		element:SetValue = function(_, newValue: boolean)
+		element.SetValue = function(_, newValue: boolean)
 			value = newValue and true or false
 			Paint()
 			LibUpdateFlag(element)
@@ -909,18 +909,18 @@ local function BuildSlider(section: any, opts: any): any
 		end
 	end
 
-	element:SetValue = function(_, newValue: number)
+	element.SetValue = function(_, newValue: number)
 		Apply(newValue, false)
 		return element
 	end
-	element:GetValue = function()
+	element.GetValue = function()
 		return value
 	end
-	element:Serialize = function()
+	element.Serialize = function()
 		return value
 	end
 	element:Repaint = Paint
-	element:RefreshTheme = function()
+	element.RefreshTheme = function()
 		fill.BackgroundColor3 = Theme.Accent
 		knobStroke.Color = Theme.Accent
 	end
@@ -1237,7 +1237,7 @@ local function BuildDropdown(section: any, opts: any): any
 	element:Connect(row.MouseButton1Click, Open)
 	TableInsert(element.Connections, outsideConn)
 
-	element:SetValue = function(_, newValue: any)
+	element.SetValue = function(_, newValue: any)
 		for item in selected do
 			selected[item] = false
 		end
@@ -1263,7 +1263,7 @@ local function BuildDropdown(section: any, opts: any): any
 		end
 		return element
 	end
-	element:GetValue = function()
+	element.GetValue = function()
 		if element.Multi then
 			return SelectedArray()
 		end
@@ -1274,7 +1274,7 @@ local function BuildDropdown(section: any, opts: any): any
 		end
 		return nil
 	end
-	element:Serialize = function()
+	element.Serialize = function()
 		if element.Multi then
 			return SelectedArray()
 		end
@@ -1285,7 +1285,7 @@ local function BuildDropdown(section: any, opts: any): any
 		end
 		return ""
 	end
-	element:RefreshItems = function(_, items: { string })
+	element.RefreshItems = function(_, items: { string })
 		TableClear(element.Items)
 		for _, item in items do
 			TableInsert(element.Items, tostring(item))
@@ -1299,10 +1299,10 @@ local function BuildDropdown(section: any, opts: any): any
 		end
 		return element
 	end
-	element:RefreshTheme = function()
+	element.RefreshTheme = function()
 		rowStroke.Color = open and Theme.Accent or Theme.Border
 	end
-	element:Destroy = function()
+	element.Destroy = function()
 		if element.Destroyed then
 			return
 		end
@@ -1350,7 +1350,7 @@ local function BuildKeybind(section: any, opts: any): any
 	local capturing = false
 	local state = false
 
-	element:SetKey = function(_, key: any)
+	element.SetKey = function(_, key: any)
 		if TypeOf(key) == "string" then
 			key = KeyFromName(key)
 		end
@@ -1359,23 +1359,23 @@ local function BuildKeybind(section: any, opts: any): any
 		LibUpdateFlag(element)
 		return element
 	end
-	element:GetKey = function()
+	element.GetKey = function()
 		return boundKey
 	end
-	element:SetValue = function(_, key: any)
+	element.SetValue = function(_, key: any)
 		element:SetKey(key)
 		return element
 	end
-	element:GetValue = function()
+	element.GetValue = function()
 		return boundKey
 	end
-	element:Serialize = function()
+	element.Serialize = function()
 		if boundKey ~= nil and TypeOf(boundKey) == "EnumItem" then
 			return boundKey.Name
 		end
 		return "Unknown"
 	end
-	element:RefreshTheme = function() end
+	element.RefreshTheme = function() end
 
 	element:Connect(chip.MouseButton1Click, function()
 		if capturing then
@@ -1779,7 +1779,7 @@ local function BuildColorPicker(section: any, opts: any): any
 
 	element:Connect(swatch.MouseButton1Click, Open)
 
-	element:SetValue = function(_, newValue: any)
+	element.SetValue = function(_, newValue: any)
 		local color: Color3
 		local transparency = 0
 		if TypeOf(newValue) == "Color3" then
@@ -1801,10 +1801,10 @@ local function BuildColorPicker(section: any, opts: any): any
 		LibUpdateFlag(element)
 		return element
 	end
-	element:GetValue = function()
+	element.GetValue = function()
 		return CurrentColor(), 1 - alpha
 	end
-	element:Serialize = function()
+	element.Serialize = function()
 		local color = CurrentColor()
 		return {
 			R = MathRound(color.R * 255),
@@ -1813,8 +1813,8 @@ local function BuildColorPicker(section: any, opts: any): any
 			T = MathRound((1 - alpha) * 255) / 255,
 		}
 	end
-	element:RefreshTheme = function() end
-	element:Destroy = function()
+	element.RefreshTheme = function() end
+	element.Destroy = function()
 		if element.Destroyed then
 			return
 		end
@@ -1865,18 +1865,18 @@ local function BuildTextbox(section: any, opts: any): any
 		PaddingRight = UDim.new(0, 8),
 	})
 
-	element:SetValue = function(_, newValue: string)
+	element.SetValue = function(_, newValue: string)
 		box.Text = tostring(newValue or "")
 		LibUpdateFlag(element)
 		return element
 	end
-	element:GetValue = function()
+	element.GetValue = function()
 		return box.Text
 	end
-	element:Serialize = function()
+	element.Serialize = function()
 		return box.Text
 	end
-	element:RefreshTheme = function() end
+	element.RefreshTheme = function() end
 
 	if element.Numeric then
 		element:Connect(box:GetPropertyChangedSignal("Text"), function()
@@ -1966,7 +1966,7 @@ local function BuildButton(section: any, opts: any): any
 		pcall(opts.Callback)
 	end)
 
-	element:RefreshTheme = function() end
+	element.RefreshTheme = function() end
 
 	return element
 end
@@ -1978,7 +1978,7 @@ local function BuildLabel(section: any, opts: any): any
 	local label = TextLabel(element.Object, opts.Text or "", 12, FONT, Theme.TextDim, opts.Alignment or Enum.TextXAlignment.Left)
 	label.Size = UDim2.new(1, 0, 0, 16)
 	label.Position = UDim2.fromOffset(0, 3)
-	element:RefreshTheme = function() end
+	element.RefreshTheme = function() end
 	return element
 end
 
@@ -1990,7 +1990,7 @@ local function BuildSeparator(section: any): any
 		BackgroundColor3 = Theme.Border,
 		BackgroundTransparency = 0.5,
 	})
-	element:RefreshTheme = function() end
+	element.RefreshTheme = function() end
 	return element
 end
 
@@ -2617,7 +2617,7 @@ local function BuildWindow(opts: any): any
 		LayoutTab(tab)
 	end
 
-	window:ClosePopups = function()
+	window.ClosePopups = function()
 		for _, tab in window.Tabs do
 			for _, column in { tab.LeftSections, tab.RightSections } do
 				for _, section in column do
@@ -2631,7 +2631,7 @@ local function BuildWindow(opts: any): any
 		end
 	end
 
-	window:AddTab = function(_, name: string): any
+	window.AddTab = function(_, name: string): any
 		local tab = BuildTab(window, tostring(name or "Tab"))
 		tab.Button = New("TextButton", tabbar, {
 			Size = UDim2.fromOffset(0, 24),
@@ -2661,14 +2661,16 @@ local function BuildWindow(opts: any): any
 		return tab
 	end
 
-	window:AddConfigSection = function(_, tab: any, name: string?)
+	window.AddConfigSection = function(_, tab: any, name: string?)
 		if tab ~= nil and tab.AddConfigSection ~= nil then
 			return tab:AddConfigSection(name or "Configs")
 		end
 		return nil
 	end
 
-	window:SetTitle = function(_, newTitle: string)
+	local StartTitleAnimation: (win: any) -> () = nil
+
+	window.SetTitle = function(_, newTitle: string)
 		window.Title = tostring(newTitle or window.Title)
 		window._TitleGen += 1
 		titleLabel.Text = window.Title
@@ -2676,7 +2678,7 @@ local function BuildWindow(opts: any): any
 		return window
 	end
 
-	window:SetVisible = function(_, visible: boolean)
+	window.SetVisible = function(_, visible: boolean)
 		windowVisible = visible
 		TweenPlay(Tween(root, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			GroupTransparency = visible and 0 or 1,
@@ -2686,7 +2688,7 @@ local function BuildWindow(opts: any): any
 
 	window:Toggle = ToggleWindow
 
-	window:Destroy = function()
+	window.Destroy = function()
 		window._TitleAlive = false
 		window._TitleGen += 1
 		for _, tab in window.Tabs do
@@ -2707,7 +2709,6 @@ local function BuildWindow(opts: any): any
 
 	-- ============ ANIMATED TITLE ============
 
-	local StartTitleAnimation: (win: any) -> () = nil
 	StartTitleAnimation = function(win: any)
 		local myGen = win._TitleGen
 		local fullText = win.Title

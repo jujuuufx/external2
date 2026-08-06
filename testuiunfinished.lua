@@ -395,6 +395,7 @@ end
 
 local function LibUpdateFlag(element: any)
 	if element.Flag ~= nil and element.Flag ~= "" then
+		Lib._FlagMap[element.Flag] = element
 		Lib.Flags[element.Flag] = element:Serialize()
 	end
 end
@@ -427,7 +428,7 @@ local function GuardBuild(name: string, fn: () -> any): any
 	return StubElement()
 end
 
-local function BuildElement(section: any, height: number, class: string): any
+local function BuildElement(section: any, height: number, class: string, opts: any?): any
 	local element: any = {
 		Type = class,
 		Section = section,
@@ -436,6 +437,9 @@ local function BuildElement(section: any, height: number, class: string): any
 		Callbacks = {},
 		Destroyed = false,
 	}
+	if opts ~= nil and opts.Callback ~= nil then
+		TableInsert(element.Callbacks, opts.Callback)
+	end
 	element.Object = New("Frame", section.Body, {
 		Size = UDim2.new(1, -20, 0, height),
 		Position = UDim2.fromOffset(10, 0),
@@ -659,7 +663,7 @@ end
 -- ==================== TOGGLE ====================
 
 local function BuildToggle(section: any, opts: any): any
-	local element = BuildElement(section, 30, "Toggle")
+	local element = BuildElement(section, 30, "Toggle", opts)
 	element.Flag = opts.Flag
 	element.Default = opts.Default == true
 	ElementLabel(element, opts.Text or opts.Flag or "Toggle")
@@ -813,6 +817,10 @@ local function BuildToggle(section: any, opts: any): any
 		element:FireCallbacks(value)
 	end)
 
+	if opts.Keybind ~= nil then
+		element:AddKeybind(opts.Keybind)
+	end
+
 	element:SetValue(element.Default)
 
 	return element
@@ -821,7 +829,7 @@ end
 -- ==================== SLIDER ====================
 
 local function BuildSlider(section: any, opts: any): any
-	local element = BuildElement(section, 46, "Slider")
+	local element = BuildElement(section, 46, "Slider", opts)
 	element.Flag = opts.Flag
 	element.Min = opts.Min or 0
 	element.Max = opts.Max or 100
@@ -980,7 +988,7 @@ end
 -- ==================== DROPDOWN ====================
 
 local function BuildDropdown(section: any, opts: any): any
-	local element = BuildElement(section, 30, "Dropdown")
+	local element = BuildElement(section, 30, "Dropdown", opts)
 	element.Flag = opts.Flag
 	element.Multi = opts.MultiSelect == true
 	element.Search = opts.Search == true
@@ -2362,6 +2370,8 @@ local function BuildWindow(opts: any): any
 		Type = "Window",
 		Title = title,
 		SubTitle = subtitle,
+		AnimatedTitle = animatedTitle,
+		TitleAnimationType = titleAnimation,
 		Tabs = {},
 		_TitleAlive = true,
 		_TitleGen = 0,
@@ -2717,11 +2727,18 @@ local function BuildWindow(opts: any): any
 			return win._TitleAlive and win._TitleGen == myGen
 		end
 
-		if not animatedTitle then
+		local existingGrad = titleLabel:FindFirstChildOfClass("UIGradient")
+		if existingGrad then
+			pcall(existingGrad.Destroy, existingGrad)
+		end
+		titleLabel.TextStrokeTransparency = 1
+
+		if not win.AnimatedTitle then
 			titleLabel.Text = fullText
 			return
 		end
-		if titleAnimation == "Typewriter" then
+		local animKind = win.TitleAnimationType or "Typewriter"
+		if animKind == "Typewriter" then
 			task.spawn(function()
 				while IsCurrent() do
 					for i = 1, #fullText do
@@ -2748,7 +2765,7 @@ local function BuildWindow(opts: any): any
 					task.wait(0.5)
 				end
 			end)
-		elseif titleAnimation == "GradientShift" then
+		elseif animKind == "GradientShift" then
 			local gradient = titleLabel:FindFirstChildOfClass("UIGradient")
 			if gradient == nil then
 				gradient = New("UIGradient", titleLabel, {

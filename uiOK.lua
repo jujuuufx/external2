@@ -487,6 +487,8 @@ local Library do
             end
 
             local Gui = self.Instance
+            Minimum = Minimum or Vector2New(300, 200)
+            Maximum = Maximum or Vector2New(9999, 9999)
 
             local Resizing = false 
             local CurrentSide = nil
@@ -495,11 +497,12 @@ local Library do
             local StartPosition = nil 
             local StartSize = nil
             
-            local EdgeThickness = 2
+            local EdgeThickness = 8
+            local CornerSize = 20
 
-            local MakeEdge = function(Name, Position, Size)
+            local MakeHandle = function(Name, Position, Size, ZIndex)
                 local Button = Instances:Create("TextButton", {
-                    Name = "\0",
+                    Name = Name or "\0",
                     Size = Size,
                     Position = Position,
                     BackgroundColor3 = FromRGB(166, 147, 243),
@@ -508,39 +511,50 @@ local Library do
                     BorderSizePixel = 0,
                     AutoButtonColor = false,
                     Parent = Gui,
-                    ZIndex = 99999,
-                })  Button:AddToTheme({BackgroundColor3 = "Accent"})
-
+                    ZIndex = ZIndex or 99999,
+                })
+                Button:AddToTheme({BackgroundColor3 = "Accent"})
                 return Button
             end
 
-            local Edges = {
-                {Button = MakeEdge(
-                    "Left", 
-                    UDim2New(0, 0, 0, 0), 
-                    UDim2New(0, EdgeThickness, 1, 0)), 
-                    Side = "L"
-                },
+            local GripHolder = Instances:Create("Frame", {
+                Name = "ResizeGrip",
+                Size = UDim2New(0, 16, 0, 16),
+                Position = UDim2New(1, -16, 1, -16),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                Parent = Gui,
+                ZIndex = 99998,
+            })
 
-                {Button = MakeEdge(
-                    "Right", 
-                    UDim2New(1, -EdgeThickness, 0, 0), 
-                    UDim2New(0, EdgeThickness, 1, 0)), 
-                    Side = "R"
-                },
+            local function CreateGripLine(offset, length)
+                local line = Instances:Create("Frame", {
+                    Parent = GripHolder.Instance,
+                    Size = UDim2New(0, length, 0, 1.5),
+                    Position = UDim2New(1, offset.X, 1, offset.Y),
+                    BackgroundColor3 = FromRGB(166, 147, 243),
+                    BackgroundTransparency = 0.5,
+                    BorderSizePixel = 0,
+                    Rotation = -45,
+                    ZIndex = 99998,
+                })
+                line:AddToTheme({BackgroundColor3 = "Accent"})
+                return line
+            end
+            local line1 = CreateGripLine(Vector2New(-6, -4), 4)
+            local line2 = CreateGripLine(Vector2New(-9, -7), 7)
+            local line3 = CreateGripLine(Vector2New(-12, -10), 10)
 
-                {Button = MakeEdge(
-                    "Top", UDim2New(0, 0, 0, 0), 
-                    UDim2New(1, 0, 0, EdgeThickness)), 
-                    Side = "T"
-                },
+            local Handles = {
+                {Button = MakeHandle("CornerBR", UDim2New(1, -CornerSize, 1, -CornerSize), UDim2New(0, CornerSize, 0, CornerSize), 100000), Side = "BR"},
+                {Button = MakeHandle("CornerBL", UDim2New(0, 0, 1, -CornerSize), UDim2New(0, CornerSize, 0, CornerSize), 100000), Side = "BL"},
+                {Button = MakeHandle("CornerTR", UDim2New(1, -CornerSize, 0, 0), UDim2New(0, CornerSize, 0, CornerSize), 100000), Side = "TR"},
+                {Button = MakeHandle("CornerTL", UDim2New(0, 0, 0, 0), UDim2New(0, CornerSize, 0, CornerSize), 100000), Side = "TL"},
 
-                {Button = MakeEdge(
-                    "Bottom", 
-                    UDim2New(0, 0, 1, -EdgeThickness), 
-                    UDim2New(1, 0, 0, EdgeThickness)), 
-                    Side = "B"
-                },
+                {Button = MakeHandle("Left", UDim2New(0, 0, 0, CornerSize), UDim2New(0, EdgeThickness, 1, -CornerSize * 2)), Side = "L"},
+                {Button = MakeHandle("Right", UDim2New(1, -EdgeThickness, 0, CornerSize), UDim2New(0, EdgeThickness, 1, -CornerSize * 2)), Side = "R"},
+                {Button = MakeHandle("Top", UDim2New(0, CornerSize, 0, 0), UDim2New(1, -CornerSize * 2, 0, EdgeThickness)), Side = "T"},
+                {Button = MakeHandle("Bottom", UDim2New(0, CornerSize, 1, -EdgeThickness), UDim2New(1, -CornerSize * 2, 0, EdgeThickness)), Side = "B"},
             }
 
             local BeginResizing = function(Side)
@@ -548,29 +562,41 @@ local Library do
                 CurrentSide = Side 
 
                 StartMouse = UserInputService:GetMouseLocation()
-
-                -- store offsets, not absolute screen pos
                 StartPosition = Vector2New(Gui.Position.X.Offset, Gui.Position.Y.Offset)
                 StartSize = Vector2New(Gui.Size.X.Offset, Gui.Size.Y.Offset)
                 
-                for Index, Value in Edges do 
-                    Value.Button.Instance.BackgroundTransparency = (Value.Side == Side) and 0 or 1
-                end
+                line1.Instance.BackgroundTransparency = 0
+                line2.Instance.BackgroundTransparency = 0
+                line3.Instance.BackgroundTransparency = 0
             end
 
             local EndResizing = function()
                 Resizing = false 
                 CurrentSide = nil
 
-                for Index, Value in Edges do 
-                    Value.Button.Instance.BackgroundTransparency = 1
-                end
+                line1.Instance.BackgroundTransparency = 0.5
+                line2.Instance.BackgroundTransparency = 0.5
+                line3.Instance.BackgroundTransparency = 0.5
             end
 
-            for Index, Value in Edges do 
+            for Index, Value in ipairs(Handles) do 
                 Value.Button:Connect("InputBegan", function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                         BeginResizing(Value.Side)
+                    end
+                end)
+                Value.Button:Connect("MouseEnter", function()
+                    if Value.Side == "BR" and not Resizing then
+                        line1.Instance.BackgroundTransparency = 0.2
+                        line2.Instance.BackgroundTransparency = 0.2
+                        line3.Instance.BackgroundTransparency = 0.2
+                    end
+                end)
+                Value.Button:Connect("MouseLeave", function()
+                    if not Resizing then
+                        line1.Instance.BackgroundTransparency = 0.5
+                        line2.Instance.BackgroundTransparency = 0.5
+                        line3.Instance.BackgroundTransparency = 0.5
                     end
                 end)
             end
@@ -595,7 +621,23 @@ local Library do
                 local x, y = StartPosition.X, StartPosition.Y
                 local w, h = StartSize.X, StartSize.Y
 
-                if CurrentSide == "L" then
+                if CurrentSide == "BR" then
+                    w = StartSize.X + dx
+                    h = StartSize.Y + dy
+                elseif CurrentSide == "BL" then
+                    x = StartPosition.X + dx
+                    w = StartSize.X - dx
+                    h = StartSize.Y + dy
+                elseif CurrentSide == "TR" then
+                    w = StartSize.X + dx
+                    y = StartPosition.Y + dy
+                    h = StartSize.Y - dy
+                elseif CurrentSide == "TL" then
+                    x = StartPosition.X + dx
+                    w = StartSize.X - dx
+                    y = StartPosition.Y + dy
+                    h = StartSize.Y - dy
+                elseif CurrentSide == "L" then
                     x = StartPosition.X + dx
                     w = StartSize.X - dx
                 elseif CurrentSide == "R" then
@@ -608,20 +650,31 @@ local Library do
                 end
             
                 if w < Minimum.X then
-                    if CurrentSide == "L" then
+                    if CurrentSide == "L" or CurrentSide == "TL" or CurrentSide == "BL" then
                         x = x - (Minimum.X - w)
                     end
                     w = Minimum.X
+                elseif w > Maximum.X then
+                    if CurrentSide == "L" or CurrentSide == "TL" or CurrentSide == "BL" then
+                        x = x + (w - Maximum.X)
+                    end
+                    w = Maximum.X
                 end
+
                 if h < Minimum.Y then
-                    if CurrentSide == "T" then
+                    if CurrentSide == "T" or CurrentSide == "TL" or CurrentSide == "TR" then
                         y = y - (Minimum.Y - h)
                     end
                     h = Minimum.Y
+                elseif h > Maximum.Y then
+                    if CurrentSide == "T" or CurrentSide == "TL" or CurrentSide == "TR" then
+                        y = y + (h - Maximum.Y)
+                    end
+                    h = Maximum.Y
                 end
             
-                self:Tween(TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2FromOffset(x, y)})
-                self:Tween(TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2FromOffset(w, h)})
+                Gui.Position = UDim2FromOffset(x, y)
+                Gui.Size = UDim2FromOffset(w, h)
             end)
         end
 

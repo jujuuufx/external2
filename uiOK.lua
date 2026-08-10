@@ -1294,34 +1294,15 @@ local Library do
             local Descendants = Items["ColorpickerWindow"].Instance:GetDescendants()
             TableInsert(Descendants, Items["ColorpickerWindow"].Instance)
 
-            local NewTween
-
             for Index, Value in Descendants do 
-                local TransparencyProperty = Tween:GetProperty(Value)
-
-                if not TransparencyProperty then
-                    continue 
-                end
-
                 if not Value.ClassName:find("UI") then 
                     Value.ZIndex = (Colorpicker.IsOpen and Data.Section.IsSettings and 9) or (Colorpicker.IsOpen and not Data.Section.IsSettings and 3) or 1
                 end
-
-                if type(TransparencyProperty) == "table" then 
-                    for _, Property in TransparencyProperty do 
-                        NewTween = Tween:FadeItem(Value, Property, Bool, Library.FadeSpeed)
-                    end
-                else
-                    NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                end
             end
             
-            NewTween.Tween.Completed:Connect(function()
-                Debounce = false 
-                Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
-                task.wait(0.2)
-                Items["ColorpickerWindow"].Instance.Parent = not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
-            end)
+            Debounce = false 
+            Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
+            Items["ColorpickerWindow"].Instance.Parent = not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
         end
 
         function Colorpicker:Set(Color)
@@ -1604,34 +1585,15 @@ local Library do
             local Descendants = Items["KeybindWindow"].Instance:GetDescendants()
             TableInsert(Descendants, Items["KeybindWindow"].Instance)
 
-            local NewTween
-
             for Index, Value in Descendants do 
-                local TransparencyProperty = Tween:GetProperty(Value)
-
-                if not TransparencyProperty then
-                    continue 
-                end
-
                 if not Value.ClassName:find("UI") then 
                     Value.ZIndex = Keybind.IsOpen and 4 or 1
                 end
-
-                if type(TransparencyProperty) == "table" then 
-                    for _, Property in TransparencyProperty do 
-                        NewTween = Tween:FadeItem(Value, Property, Bool, Library.FadeSpeed)
-                    end
-                else
-                    NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                end
             end
             
-            NewTween.Tween.Completed:Connect(function()
-                Debounce = false 
-                Items["KeybindWindow"].Instance.Visible = Keybind.IsOpen
-                task.wait(0.2)
-                Items["KeybindWindow"].Instance.Parent = not Keybind.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
-            end)
+            Debounce = false 
+            Items["KeybindWindow"].Instance.Visible = Keybind.IsOpen
+            Items["KeybindWindow"].Instance.Parent = not Keybind.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
         end
 
         function Keybind:SetMode(Mode)
@@ -2487,28 +2449,7 @@ end
                     Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.4})
                 end
 
-                local AllInstances = Items["Page"].Instance:GetDescendants()
-                TableInsert(AllInstances, Items["Page"].Instance)
-                
-                local NewTween 
-
-                for Index, Value in AllInstances do 
-                    local TransparencyProperty = Tween:GetProperty(Value)
-
-                    if not TransparencyProperty then 
-                        continue
-                    end
-
-                    if type(TransparencyProperty) == "table" then 
-                        for _, Property in TransparencyProperty do 
-                            NewTween = Tween:FadeItem(Value, Property, Bool, Library.FadeSpeed)
-                        end
-                    else
-                        NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                    end
-                end
-
-                Library:Connect(NewTween.Tween.Completed, function()
+                task.delay(0.05, function()
                     Debounce = false
                 end)
             end
@@ -3399,13 +3340,27 @@ end
                     Items["OptionHolder"].Instance.Visible = true
                     Items["OptionHolder"].Instance.Parent = Library.Holder.Instance
                     
+                    local lastHeight = -1
+                    local lastWidth = -1
+                    local lastPos = nil
                     RenderStepped = RunService.RenderStepped:Connect(function()
                         local listLayout = Items["OptionHolder"].Instance:FindFirstChildOfClass("UIListLayout")
                         local contentHeight = listLayout and listLayout.AbsoluteContentSize.Y or 0
                         local targetHeight = math.min(contentHeight + 20, 200)
-                        Items["OptionHolder"].Instance.Position = UDim2New(0, Items["RealDropdown"].Instance.AbsolutePosition.X, 0, Items["RealDropdown"].Instance.AbsolutePosition.Y - 25)
-                        Items["OptionHolder"].Instance.Size = UDim2New(0, Items["RealDropdown"].Instance.AbsoluteSize.X, 0, targetHeight)
-                        Items["OptionHolder"].Instance.CanvasSize = UDim2New(0, 0, 0, contentHeight + 20)
+                        
+                        local realPos = Items["RealDropdown"].Instance.AbsolutePosition
+                        local realWidth = Items["RealDropdown"].Instance.AbsoluteSize.X
+
+                        if contentHeight ~= lastHeight or realWidth ~= lastWidth then
+                            lastHeight = contentHeight
+                            lastWidth = realWidth
+                            Items["OptionHolder"].Instance.Size = UDim2New(0, realWidth, 0, targetHeight)
+                            Items["OptionHolder"].Instance.CanvasSize = UDim2New(0, 0, 0, contentHeight + 20)
+                        end
+                        if realPos ~= lastPos then
+                            lastPos = realPos
+                            Items["OptionHolder"].Instance.Position = UDim2New(0, realPos.X, 0, realPos.Y - 25)
+                        end
                     end)
 
                     for Index, Value in Library.OpenFrames do 
@@ -3429,34 +3384,15 @@ end
                 local Descendants = Items["OptionHolder"].Instance:GetDescendants()
                 TableInsert(Descendants, Items["OptionHolder"].Instance)
 
-                local NewTween
-
                 for Index, Value in Descendants do 
-                    local TransparencyProperty = Tween:GetProperty(Value)
-
-                    if not TransparencyProperty then
-                        continue 
-                    end
-
                     if not Value.ClassName:find("UI") then 
                         Value.ZIndex = Dropdown.IsOpen and 3 or 1
                     end
-
-                    if type(TransparencyProperty) == "table" then 
-                        for _, Property in TransparencyProperty do 
-                            NewTween = Tween:FadeItem(Value, Property, Bool, Library.FadeSpeed)
-                        end
-                    else
-                        NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                    end
                 end
                 
-                NewTween.Tween.Completed:Connect(function()
-                    Debounce = false 
-                    Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
-                    task.wait(0.2)
-                    Items["OptionHolder"].Instance.Parent = not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
-                end)
+                Debounce = false 
+                Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
+                Items["OptionHolder"].Instance.Parent = not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
             end
 
             function Dropdown:Set(Option)

@@ -964,6 +964,9 @@ local Library do
     end
 
     Library.IsClipped = function(self, Object, Column)
+        if Object and Object:IsA("ScrollingFrame") and Object:FindFirstChildWhichIsA("TextBox") then
+            return false
+        end
         local Parent = Column
         
         local BoundryTop = Parent.AbsolutePosition

@@ -1401,7 +1401,7 @@ local Library do
                     return
                 end
 
-                if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) then
+                if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) or Library:IsMouseOverFrame(Items["ColorpickerButton"]) then
                     return
                 end
 
@@ -1745,7 +1745,7 @@ local Library do
                     return
                 end
 
-                if Library:IsMouseOverFrame(Items["KeybindWindow"]) then
+                if Library:IsMouseOverFrame(Items["KeybindWindow"]) or Library:IsMouseOverFrame(Items["KeyButton"]) then
                     return
                 end
 
@@ -3616,7 +3616,7 @@ end
             Library:Connect(UserInputService.InputBegan, function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     if Dropdown.IsOpen then
-                        if Library:IsMouseOverFrame(Items["OptionHolder"]) then
+                        if Library:IsMouseOverFrame(Items["OptionHolder"]) or Library:IsMouseOverFrame(Items["RealDropdown"]) then
                             return
                         end
 

@@ -3328,6 +3328,7 @@ end
 
             local Debounce = false 
             local RenderStepped 
+            local _guiInset = game:GetService("GuiService"):GetGuiInset()
 
             function Dropdown:SetOpen(Bool)
                 if Debounce then 
@@ -3345,31 +3346,39 @@ end
                     
                     local lastHeight = -1
                     local lastWidth = -1
-                    local lastPos = nil
+                    local lastPosX = -1
+                    local lastPosY = -1
                     RenderStepped = RunService.RenderStepped:Connect(function()
                         local listLayout = Items["OptionHolder"].Instance:FindFirstChildOfClass("UIListLayout")
                         local contentHeight = listLayout and listLayout.AbsoluteContentSize.Y or 0
                         local targetHeight = math.min(contentHeight + 20, 200)
                         
                         local realPos = Items["RealDropdown"].Instance.AbsolutePosition
-                        local realWidth = Items["RealDropdown"].Instance.AbsoluteSize.X
+                        local realSize = Items["RealDropdown"].Instance.AbsoluteSize
 
-                        if contentHeight ~= lastHeight or realWidth ~= lastWidth then
+                        if contentHeight ~= lastHeight or realSize.X ~= lastWidth then
                             lastHeight = contentHeight
-                            lastWidth = realWidth
-                            Items["OptionHolder"].Instance.Size = UDim2New(0, realWidth, 0, targetHeight)
+                            lastWidth = realSize.X
+                            Items["OptionHolder"].Instance.Size = UDim2New(0, realSize.X, 0, targetHeight)
                             Items["OptionHolder"].Instance.CanvasSize = UDim2New(0, 0, 0, contentHeight + 20)
                         end
-                        if realPos ~= lastPos then
-                            lastPos = realPos
-                            Items["OptionHolder"].Instance.Position = UDim2New(0, realPos.X, 0, realPos.Y - 25)
+                        local posX = realPos.X - _guiInset.X
+                        local posY = realPos.Y + realSize.Y + 4 - _guiInset.Y
+                        if posX ~= lastPosX or posY ~= lastPosY then
+                            lastPosX = posX
+                            lastPosY = posY
+                            Items["OptionHolder"].Instance.Position = UDim2New(0, posX, 0, posY)
                         end
                     end)
 
+                    local toClose = {}
                     for Index, Value in Library.OpenFrames do 
                         if Value ~= Dropdown and not Dropdown.Section.IsSettings then 
-                            Value:SetOpen(false)
+                            TableInsert(toClose, Value)
                         end
+                    end
+                    for _, Value in toClose do
+                        Value:SetOpen(false)
                     end
 
                     Library.OpenFrames[Dropdown] = Dropdown 
@@ -3389,7 +3398,7 @@ end
 
                 for Index, Value in Descendants do 
                     if not Value.ClassName:find("UI") then 
-                        Value.ZIndex = Dropdown.IsOpen and 3 or 1
+                        Value.ZIndex = Dropdown.IsOpen and 50 or 1
                     end
                 end
                 
@@ -3584,8 +3593,11 @@ end
                     end
                 end
 
-                OptionData.Button:Connect("MouseButton1Down", function()
+                OptionData.Button:Connect("MouseButton1Click", function()
                     OptionData:Set()
+                    if not Dropdown.Multi then
+                        Dropdown:SetOpen(false)
+                    end
                 end)
 
                 Dropdown.Options[OptionData.Name] = OptionData
@@ -3609,26 +3621,30 @@ end
                 end
             end
 
-            Items["RealDropdown"]:Connect("MouseButton1Down", function()
+            Items["RealDropdown"]:Connect("MouseButton1Click", function()
                 Dropdown:SetOpen(not Dropdown.IsOpen)
             end)
 
-            Library:Connect(UserInputService.InputBegan, function(Input)
+            Library:Connect(UserInputService.InputBegan, function(Input, gameProcessed)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     if Dropdown.IsOpen then
-                        if Library:IsMouseOverFrame(Items["OptionHolder"]) or Library:IsMouseOverFrame(Items["RealDropdown"]) then
-                            return
-                        end
-
-                        Dropdown:SetOpen(false)
+                        task.defer(function()
+                            if not Dropdown.IsOpen then return end
+                            if Library:IsMouseOverFrame(Items["OptionHolder"]) or Library:IsMouseOverFrame(Items["RealDropdown"]) then
+                                return
+                            end
+                            Dropdown:SetOpen(false)
+                        end)
                     end
                 end
             end)
 
             Items["RealDropdown"]:Connect("Changed", function(Property)
                 if Property == "AbsolutePosition" and Dropdown.IsOpen then
-                    Dropdown.IsOpen = not Library:IsClipped(Items["OptionHolder"].Instance, Dropdown.Section.Items["Section"].Instance.Parent)
-                    Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
+                    local clipped = Library:IsClipped(Items["OptionHolder"].Instance, Dropdown.Section.Items["Section"].Instance.Parent)
+                    if clipped then
+                        Dropdown:SetOpen(false)
+                    end
                 end
             end)
 

@@ -949,10 +949,19 @@ local Library do
     Library.IsMouseOverFrame = function(self, Frame)
         Frame = Frame.Instance
 
-        local MousePosition = Vector2New(Mouse.X, Mouse.Y)
+        local getMouse = UserInputService:GetMouseLocation()
+        local guiInset = game:GetService("GuiService"):GetGuiInset()
+        
+        local mouseX = getMouse.X - guiInset.X
+        local mouseY = getMouse.Y - guiInset.Y
+        
+        local Pos = Frame.AbsolutePosition
+        local Size = Frame.AbsoluteSize
+        
+        local In1 = mouseX >= Pos.X and mouseX <= Pos.X + Size.X and mouseY >= Pos.Y and mouseY <= Pos.Y + Size.Y
+        local In2 = Mouse.X >= Pos.X and Mouse.X <= Pos.X + Size.X and Mouse.Y >= Pos.Y and Mouse.Y <= Pos.Y + Size.Y
 
-        return MousePosition.X >= Frame.AbsolutePosition.X and MousePosition.X <= Frame.AbsolutePosition.X + Frame.AbsoluteSize.X 
-        and MousePosition.Y >= Frame.AbsolutePosition.Y and MousePosition.Y <= Frame.AbsolutePosition.Y + Frame.AbsoluteSize.Y
+        return In1 or In2
     end
 
     Library.Lerp = function(self, Start, Finish, Time)

@@ -2113,7 +2113,7 @@ end
                     BorderColor3 = FromRGB(0, 0, 0),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, isMobile and 36 or 60, 0, isMobile and 24 or 36),
+                    Position = UDim2New(0, isMobile and 36 or 60, 0, isMobile and 24 or 38),
                     TextWrapped = true,
                     AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = isMobile and 11 or 16
